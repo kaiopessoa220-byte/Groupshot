@@ -1,0 +1,303 @@
+{
+  "name": "WA SendFlow",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "sendflow",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "0d729321-0b99-452b-8ed0-8992583ed26c",
+      "name": "Servir Formulário (GET)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "9a0eed9f-50d9-431c-89fe-c906ce726ad7"
+    },
+    {
+      "parameters": {
+        "jsCode": "const SUPABASE_URL = \"https://loaazqaucclypxffhpka.supabase.co\";\nconst SUPABASE_ANON = \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYWF6cWF1Y2NseXB4ZmZocGthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMDkwNzMsImV4cCI6MjA5Mjg4NTA3M30.tYaY9tPayRziGhVCnECIEjytM1ykwyWhTt3Mjae54oc\";\nconst BUCKET = \"sendflow\";\nconst WEBHOOK_URL = \"https://n8n.nuvantperformance.com.br/webhook/agendar-mensagem\";\n\nconst html = `<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>SendFlow</title>\n<style>\n  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');\n  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }\n  :root { --bg: #0d0e11; --surface: #14161b; --surface2: #1c1e25; --border: #2a2d38; --border-focus: #3d7fff; --text: #e8eaf0; --muted: #6b7080; --accent: #3d7fff; --accent-dim: rgba(61,127,255,0.12); --green: #22c55e; --green-dim: rgba(34,197,94,0.1); --red: #ef4444; --red-dim: rgba(239,68,68,0.1); --mono: 'IBM Plex Mono', monospace; --sans: 'IBM Plex Sans', sans-serif; }\n  html, body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.6; min-height: 100vh; }\n  body { display: flex; justify-content: center; align-items: flex-start; padding: 48px 16px 80px; }\n  .shell { width: 100%; max-width: 540px; }\n  header { margin-bottom: 36px; }\n  .logo-line { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }\n  .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }\n  .logo-text { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--green); letter-spacing: 0.08em; text-transform: uppercase; }\n  h1 { font-size: 24px; font-weight: 300; letter-spacing: -0.02em; }\n  h1 span { font-weight: 500; }\n  .subtitle { font-size: 13px; color: var(--muted); margin-top: 4px; }\n  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin-bottom: 16px; }\n  .field { margin-bottom: 20px; }\n  .field:last-child { margin-bottom: 0; }\n  label { display: block; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }\n  label .req { color: var(--accent); margin-left: 2px; }\n  label .opt { color: var(--muted); font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 11px; opacity: 0.7; }\n  input[type=\"text\"], input[type=\"datetime-local\"], textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--sans); font-size: 14px; padding: 10px 13px; outline: none; transition: border-color 0.15s; -webkit-appearance: none; appearance: none; }\n  input[type=\"datetime-local\"] { font-family: var(--mono); font-size: 13px; color-scheme: dark; }\n  input:focus, textarea:focus { border-color: var(--border-focus); }\n  input::placeholder, textarea::placeholder { color: var(--muted); opacity: 0.6; }\n  textarea { resize: vertical; min-height: 110px; line-height: 1.6; }\n  .hint { font-size: 11px; color: var(--muted); margin-top: 5px; opacity: 0.7; }\n  .hint code { font-family: var(--mono); font-size: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; }\n  .divider { height: 1px; background: var(--border); margin: 20px 0; }\n  .toggle-row { display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }\n  .toggle-label { display: block; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 0; cursor: pointer; }\n  .toggle-desc { font-size: 12px; color: var(--muted); opacity: 0.7; margin-top: 2px; }\n  input[type=\"checkbox\"] { -webkit-appearance: none; appearance: none; width: 36px; height: 20px; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; cursor: pointer; position: relative; transition: background 0.2s, border-color 0.2s; flex-shrink: 0; }\n  input[type=\"checkbox\"]::after { content: ''; position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--muted); transition: transform 0.2s, background 0.2s; }\n  input[type=\"checkbox\"]:checked { background: var(--accent-dim); border-color: var(--accent); }\n  input[type=\"checkbox\"]:checked::after { transform: translateX(16px); background: var(--accent); }\n  .schedule-tag { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(61,127,255,0.25); border-radius: 20px; padding: 3px 10px; margin-bottom: 12px; }\n  .schedule-tag::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }\n  .btn-row { display: flex; gap: 10px; }\n  .btn { flex: 1; padding: 13px; border-radius: 8px; border: none; font-family: var(--sans); font-size: 14px; font-weight: 500; cursor: pointer; transition: opacity 0.15s, transform 0.1s; display: flex; align-items: center; justify-content: center; gap: 8px; }\n  .btn:active { transform: scale(0.99); } .btn:disabled { opacity: 0.4; cursor: not-allowed; }\n  .btn-primary { background: var(--accent); color: #fff; }\n  .btn-primary:hover:not(:disabled) { opacity: 0.88; }\n  .btn-green { background: var(--green); color: #0d0e11; }\n  .btn-green:hover:not(:disabled) { opacity: 0.88; }\n  .toast { display: none; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: 8px; font-size: 13px; margin-top: 12px; line-height: 1.5; }\n  .toast.success { display: flex; background: var(--green-dim); border: 1px solid rgba(34,197,94,0.25); color: var(--green); }\n  .toast.error { display: flex; background: var(--red-dim); border: 1px solid rgba(239,68,68,0.25); color: var(--red); }\n  .toast-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }\n  .toast strong { display: block; font-weight: 500; } .toast span { opacity: 0.8; font-size: 12px; }\n  .scheduled-at-preview { font-family: var(--mono); font-size: 12px; color: var(--accent); margin-top: 6px; opacity: 0; transition: opacity 0.2s; }\n  .scheduled-at-preview.visible { opacity: 1; }\n  #spinner { display: none; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }\n  #spinner2 { display: none; width: 16px; height: 16px; border: 2px solid rgba(0,0,0,0.2); border-top-color: #0d0e11; border-radius: 50%; animation: spin 0.6s linear infinite; }\n  #dropzone { border: 1.5px dashed var(--border); border-radius: 8px; background: var(--surface2); cursor: pointer; transition: border-color 0.15s, background 0.15s; overflow: hidden; min-height: 90px; display: flex; align-items: center; justify-content: center; }\n  #dropzone:hover, #dropzone.drag-over { border-color: var(--accent); background: var(--accent-dim); }\n  #dropzone-content { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 20px; }\n  .drop-icon { font-size: 22px; } .drop-text { font-size: 13px; color: var(--muted); }\n  .drop-link { color: var(--accent); text-decoration: underline; cursor: pointer; }\n  .drop-hint { font-size: 11px; color: var(--muted); opacity: 0.6; }\n  #dropzone-preview { position: relative; width: 100%; }\n  #dropzone-preview img { width: 100%; max-height: 180px; object-fit: cover; display: block; border-radius: 6px; }\n  .remove-img { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.6); border: none; color: #fff; border-radius: 50%; width: 22px; height: 22px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; }\n  @keyframes spin { to { transform: rotate(360deg); } }\n</style>\n</head>\n<body>\n<div class=\"shell\">\n  <header>\n    <div class=\"logo-line\"><div class=\"logo-dot\"></div><span class=\"logo-text\">SendFlow</span></div>\n    <h1>Disparar <span>Grupos</span></h1>\n    <p class=\"subtitle\">Envio imediato ou agendado via WhatsApp</p>\n  </header>\n  <div class=\"card\">\n    <div class=\"field\">\n      <label>ID do Grupo <span class=\"req\">*</span></label>\n      <input type=\"text\" id=\"groupId\" placeholder=\"120363XXXXXXXXXX@g.us\" autocomplete=\"off\" />\n      <p class=\"hint\">Capture no painel da Evolution. O campo e <code>remoteJid</code>.</p>\n    </div>\n    <div class=\"divider\"></div>\n    <div class=\"field\">\n      <label>Mensagem <span class=\"req\">*</span></label>\n      <textarea id=\"message\" placeholder=\"Digite a mensagem que sera enviada para o grupo...\"></textarea>\n    </div>\n    <div class=\"field\">\n      <label>Imagem <span class=\"opt\">(opcional)</span></label>\n      <div id=\"dropzone\" onclick=\"document.getElementById('fileInput').click()\">\n        <input type=\"file\" id=\"fileInput\" accept=\"image/*\" style=\"display:none\" onchange=\"handleFile(this.files[0])\">\n        <div id=\"dropzone-content\">\n          <div class=\"drop-icon\">&#128444;&#65039;</div>\n          <div class=\"drop-text\">Arraste uma imagem ou <span class=\"drop-link\">clique para escolher</span></div>\n          <div class=\"drop-hint\">PNG, JPG, WEBP - max 5MB</div>\n        </div>\n        <div id=\"dropzone-preview\" style=\"display:none\">\n          <img id=\"preview-img\" src=\"\" alt=\"preview\">\n          <button class=\"remove-img\" onclick=\"removeImage(event)\">x</button>\n        </div>\n      </div>\n    </div>\n    <div class=\"divider\"></div>\n    <div class=\"field\">\n      <div class=\"toggle-row\">\n        <div>\n          <label class=\"toggle-label\" for=\"mentionAll\">Mencionar todos</label>\n          <p class=\"toggle-desc\">Notifica todos os membros do grupo</p>\n        </div>\n        <input type=\"checkbox\" id=\"mentionAll\" />\n      </div>\n    </div>\n  </div>\n  <div class=\"card\">\n    <span class=\"schedule-tag\">Agendamento</span>\n    <div class=\"field\">\n      <label>Data e hora do envio <span class=\"req\">*</span></label>\n      <input type=\"datetime-local\" id=\"scheduledAt\" />\n      <p class=\"scheduled-at-preview\" id=\"schedPreview\"></p>\n      <p class=\"hint\">Horario de Brasilia (BRT, UTC-3).</p>\n    </div>\n  </div>\n  <div class=\"btn-row\">\n    <button class=\"btn btn-green\" id=\"sendNowBtn\" onclick=\"handleSendNow()\">\n      <div id=\"spinner2\"></div>\n      <span id=\"btnNowText\">&#9658; Enviar Agora</span>\n    </button>\n    <button class=\"btn btn-primary\" id=\"submitBtn\" onclick=\"handleSubmit()\">\n      <div id=\"spinner\"></div>\n      <span id=\"btnText\">&#128337; Agendar</span>\n    </button>\n  </div>\n  <div class=\"toast\" id=\"toastSuccess\">\n    <span class=\"toast-icon\">&#10003;</span>\n    <div><strong id=\"successTitle\">Mensagem agendada!</strong><span id=\"successDetail\">Sera enviada conforme programado.</span></div>\n  </div>\n  <div class=\"toast\" id=\"toastError\">\n    <span class=\"toast-icon\">&#10007;</span>\n    <div><strong>Erro</strong><span id=\"errorDetail\">Verifique os campos e tente novamente.</span></div>\n  </div>\n</div>\n<script>\n  var WEBHOOK_URL = \"${WEBHOOK_URL}\";\n  var SUPABASE_URL = \"${SUPABASE_URL}\";\n  var SUPABASE_ANON = \"${SUPABASE_ANON}\";\n  var BUCKET = \"${BUCKET}\";\n  var imageFile = null;\n\n  var dropzone = document.getElementById(\"dropzone\");\n  dropzone.addEventListener(\"dragover\", function(e) { e.preventDefault(); dropzone.classList.add(\"drag-over\"); });\n  dropzone.addEventListener(\"dragleave\", function() { dropzone.classList.remove(\"drag-over\"); });\n  dropzone.addEventListener(\"drop\", function(e) { e.preventDefault(); dropzone.classList.remove(\"drag-over\"); var f = e.dataTransfer.files[0]; if (f) handleFile(f); });\n\n  function handleFile(file) {\n    if (!file || !file.type.startsWith(\"image/\")) { alert(\"Selecione uma imagem valida.\"); return; }\n    if (file.size > 5 * 1024 * 1024) { alert(\"Imagem muito grande. Maximo 5MB.\"); return; }\n    imageFile = file;\n    var reader = new FileReader();\n    reader.onload = function(e) {\n      document.getElementById(\"preview-img\").src = e.target.result;\n      document.getElementById(\"dropzone-content\").style.display = \"none\";\n      document.getElementById(\"dropzone-preview\").style.display = \"block\";\n    };\n    reader.readAsDataURL(file);\n  }\n\n  function removeImage(e) {\n    e.stopPropagation();\n    imageFile = null;\n    document.getElementById(\"preview-img\").src = \"\";\n    document.getElementById(\"fileInput\").value = \"\";\n    document.getElementById(\"dropzone-content\").style.display = \"flex\";\n    document.getElementById(\"dropzone-preview\").style.display = \"none\";\n  }\n\n  async function uploadImage(file) {\n    var ext = (file.name.split(\".\").pop() || \"jpg\").toLowerCase();\n    var filename = \"sendflow_\" + Date.now() + \".\" + ext;\n    var uploadUrl = SUPABASE_URL + \"/storage/v1/object/\" + BUCKET + \"/\" + filename;\n    var publicUrl = SUPABASE_URL + \"/storage/v1/object/public/\" + BUCKET + \"/\" + filename;\n    var res = await fetch(uploadUrl, {\n      method: \"POST\",\n      headers: { \"apikey\": SUPABASE_ANON, \"Authorization\": \"Bearer \" + SUPABASE_ANON, \"Content-Type\": file.type },\n      body: file\n    });\n    if (!res.ok) throw new Error(\"Erro no upload da imagem: \" + res.status);\n    return publicUrl;\n  }\n\n  var schedInput = document.getElementById(\"scheduledAt\");\n  var schedPreview = document.getElementById(\"schedPreview\");\n\n  function setDefaultDatetime() {\n    var now = new Date(); now.setMinutes(now.getMinutes() + 5);\n    var pad = function(n) { return String(n).padStart(2, \"0\"); };\n    schedInput.value = now.getFullYear() + \"-\" + pad(now.getMonth()+1) + \"-\" + pad(now.getDate()) + \"T\" + pad(now.getHours()) + \":\" + pad(now.getMinutes());\n    updatePreview();\n  }\n\n  function nowDatetimeLocal() {\n    var now = new Date();\n    var pad = function(n) { return String(n).padStart(2, \"0\"); };\n    return now.getFullYear() + \"-\" + pad(now.getMonth()+1) + \"-\" + pad(now.getDate()) + \"T\" + pad(now.getHours()) + \":\" + pad(now.getMinutes());\n  }\n\n  function updatePreview() {\n    var val = schedInput.value;\n    if (!val) { schedPreview.classList.remove(\"visible\"); return; }\n    schedPreview.textContent = \"-> \" + new Date(val).toLocaleString(\"pt-BR\", { weekday: \"long\", day: \"2-digit\", month: \"short\", year: \"numeric\", hour: \"2-digit\", minute: \"2-digit\" });\n    schedPreview.classList.add(\"visible\");\n  }\n\n  schedInput.addEventListener(\"change\", updatePreview);\n  setDefaultDatetime();\n\n  function validate() {\n    if (!document.getElementById(\"groupId\").value.trim()) { alert(\"Informe o ID do grupo.\"); return false; }\n    if (!document.getElementById(\"message\").value.trim()) { alert(\"Informe a mensagem.\"); return false; }\n    return true;\n  }\n\n  function setLoading(isNow, loading) {\n    var btn = document.getElementById(isNow ? \"sendNowBtn\" : \"submitBtn\");\n    var spinner = document.getElementById(isNow ? \"spinner2\" : \"spinner\");\n    var btnText = document.getElementById(isNow ? \"btnNowText\" : \"btnText\");\n    var otherBtn = document.getElementById(isNow ? \"submitBtn\" : \"sendNowBtn\");\n    btn.disabled = loading;\n    otherBtn.disabled = loading;\n    spinner.style.display = loading ? \"block\" : \"none\";\n    if (!loading) {\n      btnText.innerHTML = isNow ? \"&#9658; Enviar Agora\" : \"&#128337; Agendar\";\n    }\n  }\n\n  async function submit(scheduledAt, isNow) {\n    if (!validate()) return;\n    setLoading(isNow, true);\n    document.getElementById(isNow ? \"btnNowText\" : \"btnText\").textContent = \"\";\n    document.getElementById(\"toastSuccess\").style.display = \"none\";\n    document.getElementById(\"toastError\").style.display = \"none\";\n    try {\n      var imageUrl = null;\n      if (imageFile) {\n        document.getElementById(isNow ? \"btnNowText\" : \"btnText\").textContent = \"Enviando imagem...\";\n        imageUrl = await uploadImage(imageFile);\n      }\n      document.getElementById(isNow ? \"btnNowText\" : \"btnText\").textContent = isNow ? \"Enviando...\" : \"Agendando...\";\n      var payload = {\n        groupId: document.getElementById(\"groupId\").value.trim(),\n        message: document.getElementById(\"message\").value.trim(),\n        imageUrl: imageUrl || \"\",\n        imageMimetype: imageFile ? imageFile.type : \"\",\n        mentionAll: document.getElementById(\"mentionAll\").checked,\n        scheduledAt: scheduledAt\n      };\n      var res = await fetch(WEBHOOK_URL, { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify(payload) });\n      if (res.ok) {\n        document.getElementById(\"successTitle\").textContent = isNow ? \"Mensagem enviada!\" : \"Mensagem agendada!\";\n        document.getElementById(\"successDetail\").textContent = isNow ? \"Ja esta a caminho do grupo.\" : \"Sera enviada em \" + new Date(scheduledAt).toLocaleString(\"pt-BR\", { day: \"2-digit\", month: \"short\", hour: \"2-digit\", minute: \"2-digit\" }) + \".\";\n        document.getElementById(\"toastSuccess\").className = \"toast success\";\n        document.getElementById(\"message\").value = \"\";\n        document.getElementById(\"mentionAll\").checked = false;\n        removeImage({ stopPropagation: function() {} });\n        setDefaultDatetime();\n      } else { throw new Error(\"HTTP \" + res.status); }\n    } catch (err) {\n      document.getElementById(\"errorDetail\").textContent = err.message || \"Erro desconhecido.\";\n      document.getElementById(\"toastError\").className = \"toast error\";\n    } finally { setLoading(isNow, false); }\n  }\n\n  function handleSendNow() { submit(nowDatetimeLocal(), true); }\n\n  function handleSubmit() {\n    if (!schedInput.value) { alert(\"Selecione a data e hora.\"); return; }\n    submit(schedInput.value, false);\n  }\n</script>\n</body>\n</html>`;\n\nreturn [{ json: { html } }];"
+      },
+      "id": "ade88798-6f2d-4ba0-bd92-5b32ba3b70f6",
+      "name": "Gerar HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "id": "94c60844-48e8-42d0-af20-ee0f39c1e41c",
+      "name": "Responder HTML",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        448,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agendar-mensagem",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "8592b45b-fb77-4d27-97ce-7125c6665761",
+      "name": "Receber Dados do Form",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        320
+      ],
+      "webhookId": "b163aacf-f424-4741-bb8e-641459b31899"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\nreturn [{ json: { groupId: body.groupId || \"\", message: body.message || \"\", imageUrl: body.imageUrl || \"\", imageMimetype: body.imageMimetype || \"image/jpeg\", mentionAll: body.mentionAll === true || body.mentionAll === \"true\", scheduledAt: body.scheduledAt || \"\" } }];"
+      },
+      "id": "1b8cbf54-abd6-4eb4-99f7-75b1b1ff8770",
+      "name": "Normalizar Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": {
+          "ok": true,
+          "message": "Agendamento salvo com sucesso"
+        },
+        "options": {}
+      },
+      "id": "ba412d45-c36c-4cc7-8c36-3d599ac9ce83",
+      "name": "Responder OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        448,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "resume": "specificTime",
+        "dateTime": "={{ $json.scheduledAt + \":00-03:00\" }}"
+      },
+      "id": "40342eac-dfba-4faa-a9ee-ac1ffdf1038e",
+      "name": "Aguardar Horário",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        416
+      ],
+      "webhookId": "8991fe98-98d4-4405-ac4e-91a876ca394d"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cond-imagem",
+              "leftValue": "={{ $json.imageUrl.length }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "rightValue": 0
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "663fed16-3085-4b9d-ac70-67b0295c2355",
+      "name": "Tem Imagem?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://evolution-api.nuvantperformance.com.br/message/sendMedia/teste",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "evolutionApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"number\": $json.groupId, \"mediatype\": \"image\", \"media\": $json.imageUrl, \"mimetype\": $json.imageMimetype, \"caption\": $json.message, \"mentionsEveryOne\": $json.mentionAll } }}",
+        "options": {}
+      },
+      "id": "924baaa6-c42c-4197-b9e0-b5c9f459ebd1",
+      "name": "Enviar Imagem (Evolution)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        896,
+        320
+      ],
+      "credentials": {
+        "evolutionApi": {
+          "id": "1N4ss4TwK4xduojA",
+          "name": "evolution"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://evolution-api.nuvantperformance.com.br/message/sendText/teste",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "evolutionApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"number\": $json.groupId, \"text\": $json.message, \"mentionsEveryOne\": $json.mentionAll } }}",
+        "options": {}
+      },
+      "id": "267e5a3d-f824-48e0-80a3-51d7393682fe",
+      "name": "Enviar Texto (Evolution)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        896,
+        512
+      ],
+      "credentials": {
+        "evolutionApi": {
+          "id": "1N4ss4TwK4xduojA",
+          "name": "evolution"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Servir Formulário (GET)": {
+      "main": [
+        [
+          {
+            "node": "Gerar HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar HTML": {
+      "main": [
+        [
+          {
+            "node": "Responder HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receber Dados do Form": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Payload": {
+      "main": [
+        [
+          {
+            "node": "Responder OK",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Aguardar Horário",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aguardar Horário": {
+      "main": [
+        [
+          {
+            "node": "Tem Imagem?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tem Imagem?": {
+      "main": [
+        [
+          {
+            "node": "Enviar Imagem (Evolution)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enviar Texto (Evolution)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  },
+  "versionId": "ea268ad4-2fa8-4e08-b4ef-e750a1ffa35f",
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp",
+    "instanceId": "ade120977f32d60593043d8a422ab486fd063e03d39b22be08a03067d47f49e1"
+  },
+  "id": "n61hK04TeK8WfZFt",
+  "tags": []
+}

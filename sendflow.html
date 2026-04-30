@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SendFlow</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --bg: #0d0e11; --surface: #14161b; --surface2: #1c1e25; --border: #2a2d38; --border-focus: #3d7fff; --text: #e8eaf0; --muted: #6b7080; --accent: #3d7fff; --accent-dim: rgba(61,127,255,0.12); --green: #22c55e; --green-dim: rgba(34,197,94,0.1); --red: #ef4444; --red-dim: rgba(239,68,68,0.1); --mono: 'IBM Plex Mono', monospace; --sans: 'IBM Plex Sans', sans-serif; }
+  html, body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.6; min-height: 100vh; }
+  body { display: flex; justify-content: center; align-items: flex-start; padding: 48px 16px 80px; }
+  .shell { width: 100%; max-width: 540px; }
+  header { margin-bottom: 36px; }
+  .logo-line { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .logo-text { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--green); letter-spacing: 0.08em; text-transform: uppercase; }
+  h1 { font-size: 24px; font-weight: 300; letter-spacing: -0.02em; }
+  h1 span { font-weight: 500; }
+  .subtitle { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin-bottom: 16px; }
+  .field { margin-bottom: 20px; }
+  .field:last-child { margin-bottom: 0; }
+  label { display: block; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+  label .req { color: var(--accent); margin-left: 2px; }
+  label .opt { color: var(--muted); font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 11px; opacity: 0.7; }
+  input[type="text"], input[type="datetime-local"], textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--sans); font-size: 14px; padding: 10px 13px; outline: none; transition: border-color 0.15s; -webkit-appearance: none; appearance: none; }
+  input[type="datetime-local"] { font-family: var(--mono); font-size: 13px; color-scheme: dark; }
+  input:focus, textarea:focus { border-color: var(--border-focus); }
+  input::placeholder, textarea::placeholder { color: var(--muted); opacity: 0.6; }
+  textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
+  .hint { font-size: 11px; color: var(--muted); margin-top: 5px; opacity: 0.7; }
+  .hint code { font-family: var(--mono); font-size: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; }
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
+  .toggle-label { display: block; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 0; cursor: pointer; }
+  .toggle-desc { font-size: 12px; color: var(--muted); opacity: 0.7; margin-top: 2px; }
+  input[type="checkbox"] { -webkit-appearance: none; appearance: none; width: 36px; height: 20px; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; cursor: pointer; position: relative; transition: background 0.2s, border-color 0.2s; flex-shrink: 0; }
+  input[type="checkbox"]::after { content: ''; position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--muted); transition: transform 0.2s, background 0.2s; }
+  input[type="checkbox"]:checked { background: var(--accent-dim); border-color: var(--accent); }
+  input[type="checkbox"]:checked::after { transform: translateX(16px); background: var(--accent); }
+  .schedule-tag { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(61,127,255,0.25); border-radius: 20px; padding: 3px 10px; margin-bottom: 12px; }
+  .schedule-tag::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+  .btn-row { display: flex; gap: 10px; }
+  .btn { flex: 1; padding: 13px; border-radius: 8px; border: none; font-family: var(--sans); font-size: 14px; font-weight: 500; cursor: pointer; transition: opacity 0.15s, transform 0.1s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn:active { transform: scale(0.99); } .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover:not(:disabled) { opacity: 0.88; }
+  .btn-green { background: var(--green); color: #0d0e11; }
+  .btn-green:hover:not(:disabled) { opacity: 0.88; }
+  .toast { display: none; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: 8px; font-size: 13px; margin-top: 12px; line-height: 1.5; }
+  .toast.success { display: flex; background: var(--green-dim); border: 1px solid rgba(34,197,94,0.25); color: var(--green); }
+  .toast.error { display: flex; background: var(--red-dim); border: 1px solid rgba(239,68,68,0.25); color: var(--red); }
+  .toast-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .toast strong { display: block; font-weight: 500; } .toast span { opacity: 0.8; font-size: 12px; }
+  .scheduled-at-preview { font-family: var(--mono); font-size: 12px; color: var(--accent); margin-top: 6px; opacity: 0; transition: opacity 0.2s; }
+  .scheduled-at-preview.visible { opacity: 1; }
+  #spinner { display: none; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
+  #spinner2 { display: none; width: 16px; height: 16px; border: 2px solid rgba(0,0,0,0.2); border-top-color: #0d0e11; border-radius: 50%; animation: spin 0.6s linear infinite; }
+  #dropzone { border: 1.5px dashed var(--border); border-radius: 8px; background: var(--surface2); cursor: pointer; transition: border-color 0.15s, background 0.15s; overflow: hidden; min-height: 90px; display: flex; align-items: center; justify-content: center; }
+  #dropzone:hover, #dropzone.drag-over { border-color: var(--accent); background: var(--accent-dim); }
+  #dropzone-content { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 20px; }
+  .drop-icon { font-size: 22px; } .drop-text { font-size: 13px; color: var(--muted); }
+  .drop-link { color: var(--accent); text-decoration: underline; cursor: pointer; }
+  .drop-hint { font-size: 11px; color: var(--muted); opacity: 0.6; }
+  #dropzone-preview { position: relative; width: 100%; }
+  #dropzone-preview img { width: 100%; max-height: 180px; object-fit: cover; display: block; border-radius: 6px; }
+  .remove-img { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.6); border: none; color: #fff; border-radius: 50%; width: 22px; height: 22px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div class="logo-line"><div class="logo-dot"></div><span class="logo-text">SendFlow</span></div>
+    <h1>Disparar <span>Grupos</span></h1>
+    <p class="subtitle">Envio imediato ou agendado via WhatsApp</p>
+  </header>
+  <div class="card">
+    <div class="field">
+      <label>ID do Grupo <span class="req">*</span></label>
+      <input type="text" id="groupId" placeholder="120363XXXXXXXXXX@g.us" autocomplete="off" />
+      <p class="hint">Capture no painel da Evolution. O campo e <code>remoteJid</code>.</p>
+    </div>
+    <div class="divider"></div>
+    <div class="field">
+      <label>Mensagem <span class="req">*</span></label>
+      <textarea id="message" placeholder="Digite a mensagem que sera enviada para o grupo..."></textarea>
+    </div>
+    <div class="field">
+      <label>Imagem <span class="opt">(opcional)</span></label>
+      <div id="dropzone" onclick="document.getElementById('fileInput').click()">
+        <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleFile(this.files[0])">
+        <div id="dropzone-content">
+          <div class="drop-icon">🖼️</div>
+          <div class="drop-text">Arraste uma imagem ou <span class="drop-link">clique para escolher</span></div>
+          <div class="drop-hint">PNG, JPG, WEBP - max 5MB</div>
+        </div>
+        <div id="dropzone-preview" style="display:none">
+          <img id="preview-img" src="" alt="preview">
+          <button class="remove-img" onclick="removeImage(event)">✕</button>
+        </div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="field">
+      <div class="toggle-row">
+        <div>
+          <label class="toggle-label" for="mentionAll">Mencionar todos</label>
+          <p class="toggle-desc">Notifica todos os membros do grupo</p>
+        </div>
+        <input type="checkbox" id="mentionAll" />
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <span class="schedule-tag">Agendamento</span>
+    <div class="field">
+      <label>Data e hora do envio <span class="req">*</span></label>
+      <input type="datetime-local" id="scheduledAt" />
+      <p class="scheduled-at-preview" id="schedPreview"></p>
+      <p class="hint">Horario de Brasilia (BRT, UTC-3).</p>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-green" id="sendNowBtn" onclick="handleSendNow()">
+      <div id="spinner2"></div>
+      <span id="btnNowText">▶ Enviar Agora</span>
+    </button>
+    <button class="btn btn-primary" id="submitBtn" onclick="handleSubmit()">
+      <div id="spinner"></div>
+      <span id="btnText">🕑 Agendar</span>
+    </button>
+  </div>
+  <div class="toast" id="toastSuccess">
+    <span class="toast-icon">✓</span>
+    <div><strong id="successTitle">Mensagem agendada!</strong><span id="successDetail">Sera enviada conforme programado.</span></div>
+  </div>
+  <div class="toast" id="toastError">
+    <span class="toast-icon">✕</span>
+    <div><strong>Erro</strong><span id="errorDetail">Verifique os campos e tente novamente.</span></div>
+  </div>
+</div>
+<script>
+  var WEBHOOK_URL = "https://n8n.nuvantperformance.com.br/webhook/agendar-mensagem";
+  var SUPABASE_URL = "https://loaazqaucclypxffhpka.supabase.co";
+  var SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYWF6cWF1Y2NseXB4ZmZocGthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMDkwNzMsImV4cCI6MjA5Mjg4NTA3M30.tYaY9tPayRziGhVCnECIEjytM1ykwyWhTt3Mjae54oc";
+  var BUCKET = "sendflow";
+  var imageFile = null;
+
+  var dropzone = document.getElementById("dropzone");
+  dropzone.addEventListener("dragover", function(e) { e.preventDefault(); dropzone.classList.add("drag-over"); });
+  dropzone.addEventListener("dragleave", function() { dropzone.classList.remove("drag-over"); });
+  dropzone.addEventListener("drop", function(e) { e.preventDefault(); dropzone.classList.remove("drag-over"); var f = e.dataTransfer.files[0]; if (f) handleFile(f); });
+
+  function handleFile(file) {
+    if (!file || !file.type.startsWith("image/")) { alert("Selecione uma imagem valida."); return; }
+    if (file.size > 5 * 1024 * 1024) { alert("Imagem muito grande. Maximo 5MB."); return; }
+    imageFile = file;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById("preview-img").src = e.target.result;
+      document.getElementById("dropzone-content").style.display = "none";
+      document.getElementById("dropzone-preview").style.display = "block";
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removeImage(e) {
+    e.stopPropagation();
+    imageFile = null;
+    document.getElementById("preview-img").src = "";
+    document.getElementById("fileInput").value = "";
+    document.getElementById("dropzone-content").style.display = "flex";
+    document.getElementById("dropzone-preview").style.display = "none";
+  }
+
+  async function uploadImage(file) {
+    var ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    var filename = "sendflow_" + Date.now() + "." + ext;
+    var uploadUrl = SUPABASE_URL + "/storage/v1/object/" + BUCKET + "/" + filename;
+    var publicUrl = SUPABASE_URL + "/storage/v1/object/public/" + BUCKET + "/" + filename;
+    var res = await fetch(uploadUrl, {
+      method: "POST",
+      headers: { "apikey": SUPABASE_ANON, "Authorization": "Bearer " + SUPABASE_ANON, "Content-Type": file.type },
+      body: file
+    });
+    if (!res.ok) throw new Error("Erro no upload da imagem: " + res.status);
+    return publicUrl;
+  }
+
+  var schedInput = document.getElementById("scheduledAt");
+  var schedPreview = document.getElementById("schedPreview");
+
+  function setDefaultDatetime() {
+    var now = new Date(); now.setMinutes(now.getMinutes() + 5);
+    var pad = function(n) { return String(n).padStart(2, "0"); };
+    schedInput.value = now.getFullYear() + "-" + pad(now.getMonth()+1) + "-" + pad(now.getDate()) + "T" + pad(now.getHours()) + ":" + pad(now.getMinutes());
+    updatePreview();
+  }
+
+  function nowDatetimeLocal() {
+    var now = new Date();
+    var pad = function(n) { return String(n).padStart(2, "0"); };
+    return now.getFullYear() + "-" + pad(now.getMonth()+1) + "-" + pad(now.getDate()) + "T" + pad(now.getHours()) + ":" + pad(now.getMinutes());
+  }
+
+  function updatePreview() {
+    var val = schedInput.value;
+    if (!val) { schedPreview.classList.remove("visible"); return; }
+    schedPreview.textContent = "-> " + new Date(val).toLocaleString("pt-BR", { weekday: "long", day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    schedPreview.classList.add("visible");
+  }
+
+  schedInput.addEventListener("change", updatePreview);
+  setDefaultDatetime();
+
+  function validate() {
+    if (!document.getElementById("groupId").value.trim()) { alert("Informe o ID do grupo."); return false; }
+    if (!document.getElementById("message").value.trim()) { alert("Informe a mensagem."); return false; }
+    return true;
+  }
+
+  function setLoading(isNow, loading) {
+    var btn = document.getElementById(isNow ? "sendNowBtn" : "submitBtn");
+    var spinner = document.getElementById(isNow ? "spinner2" : "spinner");
+    var btnText = document.getElementById(isNow ? "btnNowText" : "btnText");
+    var otherBtn = document.getElementById(isNow ? "submitBtn" : "sendNowBtn");
+    btn.disabled = loading;
+    otherBtn.disabled = loading;
+    spinner.style.display = loading ? "block" : "none";
+    if (!loading) {
+      btnText.innerHTML = isNow ? "&#9658; Enviar Agora" : "&#128337; Agendar";
+    }
+  }
+
+  async function submit(scheduledAt, isNow) {
+    if (!validate()) return;
+    setLoading(isNow, true);
+    document.getElementById(isNow ? "btnNowText" : "btnText").textContent = "";
+    document.getElementById("toastSuccess").style.display = "none";
+    document.getElementById("toastError").style.display = "none";
+    try {
+      var imageUrl = null;
+      if (imageFile) {
+        document.getElementById(isNow ? "btnNowText" : "btnText").textContent = "Enviando imagem...";
+        imageUrl = await uploadImage(imageFile);
+      }
+      document.getElementById(isNow ? "btnNowText" : "btnText").textContent = isNow ? "Enviando..." : "Agendando...";
+      var payload = {
+        groupId: document.getElementById("groupId").value.trim(),
+        message: document.getElementById("message").value.trim(),
+        imageUrl: imageUrl || "",
+        imageMimetype: imageFile ? imageFile.type : "",
+        mentionAll: document.getElementById("mentionAll").checked,
+        scheduledAt: scheduledAt
+      };
+      var res = await fetch(WEBHOOK_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      if (res.ok) {
+        document.getElementById("successTitle").textContent = isNow ? "Mensagem enviada!" : "Mensagem agendada!";
+        document.getElementById("successDetail").textContent = isNow ? "Ja esta a caminho do grupo." : "Sera enviada em " + new Date(scheduledAt).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) + ".";
+        document.getElementById("toastSuccess").className = "toast success";
+        document.getElementById("message").value = "";
+        document.getElementById("mentionAll").checked = false;
+        removeImage({ stopPropagation: function() {} });
+        setDefaultDatetime();
+      } else { throw new Error("HTTP " + res.status); }
+    } catch (err) {
+      document.getElementById("errorDetail").textContent = err.message || "Erro desconhecido.";
+      document.getElementById("toastError").className = "toast error";
+    } finally { setLoading(isNow, false); }
+  }
+
+  function handleSendNow() { submit(nowDatetimeLocal(), true); }
+
+  function handleSubmit() {
+    if (!schedInput.value) { alert("Selecione a data e hora."); return; }
+    submit(schedInput.value, false);
+  }
+</script>
+</body>
+</html>
