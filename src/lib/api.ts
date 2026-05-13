@@ -60,6 +60,15 @@ export async function fetchQRCode(instanceName: string): Promise<{ base64: strin
   return res.json()
 }
 
+export async function createInstance(instanceName: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/instance/create`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify({ instanceName }),
+  })
+  if (!res.ok) throw new Error(await res.text())
+}
+
 export async function fetchGroups(instance: string, withParticipants = false): Promise<Group[]> {
   const params = new URLSearchParams({ instance })
   if (withParticipants) params.set('participants', 'true')

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { fetchInstances, fetchQRCode } from '../lib/api'
+import { fetchInstances, fetchQRCode, createInstance } from '../lib/api'
 import type { Instance } from '../lib/api'
 
 export default function Contas() {
@@ -13,6 +13,12 @@ export default function Contas() {
   const [qrLoading, setQrLoading] = useState(false)
   const [qrConnected, setQrConnected] = useState(false)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Nova instância
+  const [showNova, setShowNova] = useState(false)
+  const [novoNome, setNovoNome] = useState('')
+  const [criando, setCriando] = useState(false)
+  const [criarErro, setCriarErro] = useState('')
 
   const load = () => {
     setLoading(true)
@@ -66,6 +72,25 @@ export default function Contas() {
     if (pollRef.current) clearInterval(pollRef.current)
   }
 
+  const handleCriarInstancia = async () => {
+    const nome = novoNome.trim()
+    if (!nome) return
+    setCriando(true)
+    setCriarErro('')
+    try {
+      await createInstance(nome)
+      setNovoNome('')
+      setShowNova(false)
+      // Abre QR automaticamente após criar
+      await openQR(nome)
+      load()
+    } catch (e: unknown) {
+      setCriarErro(e instanceof Error ? e.message : 'Erro ao criar instância')
+    } finally {
+      setCriando(false)
+    }
+  }
+
   if (loading) return (
     <div className="p-8 flex items-center gap-2 text-muted text-sm">
       <div className="w-4 h-4 border-2 border-border border-t-accent rounded-full animate-spin" />
@@ -90,12 +115,20 @@ export default function Contas() {
           <p className="text-xs text-muted uppercase tracking-widest mb-1.5">WhatsApp</p>
           <h1 className="text-2xl font-semibold text-white tracking-tight">Contas</h1>
         </div>
-        <button onClick={load} className="btn-secondary flex items-center gap-2">
-          <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          Atualizar
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={load} className="btn-secondary flex items-center gap-2">
+            <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Atualizar
+          </button>
+          <button onClick={() => { setShowNova(true); setCriarErro('') }} className="btn-primary flex items-center gap-2">
+            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Nova instância
+          </button>
+        </div>
       </div>
 
       {/* Summary chips */}
@@ -182,6 +215,45 @@ export default function Contas() {
                 </div>
               )
             })}
+          </div>
+        </div>
+      )}
+
+      {/* Modal Nova Instância */}
+      {showNova && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-surface border border-border rounded-xl w-full max-w-sm p-6 shadow-modal">
+            <h2 className="text-base font-semibold mb-1">Nova instância</h2>
+            <p className="text-xs text-muted mb-5">
+              Crie uma nova instância WhatsApp. Após criar, o QR Code será gerado automaticamente.
+            </p>
+            <input
+              type="text"
+              placeholder="Nome da instância (ex: vendas, suporte)"
+              value={novoNome}
+              onChange={e => setNovoNome(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleCriarInstancia()}
+              autoFocus
+              className="input mb-3"
+            />
+            {criarErro && (
+              <p className="text-xs text-red-400 mb-3">{criarErro}</p>
+            )}
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setShowNova(false); setNovoNome(''); setCriarErro('') }}
+                className="btn-secondary flex-1 py-2.5"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCriarInstancia}
+                disabled={criando || !novoNome.trim()}
+                className="btn-primary flex-1 py-2.5"
+              >
+                {criando ? 'Criando...' : 'Criar e conectar'}
+              </button>
+            </div>
           </div>
         </div>
       )}

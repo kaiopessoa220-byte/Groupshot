@@ -218,7 +218,10 @@ export default function NovoDisparo() {
                       onChange={() => toggleGroup(g.id)}
                       className="accent-accent w-4 h-4 flex-shrink-0"
                     />
-                    <span className="text-sm text-white">{g.subject}</span>
+                    <span className="text-sm text-white flex-1 truncate">{g.subject}</span>
+                    {g.size != null && (
+                      <span className="text-[11px] text-muted flex-shrink-0">{g.size} part.</span>
+                    )}
                   </label>
                 ))}
               </div>

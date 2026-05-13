@@ -28,7 +28,6 @@ export default function CampanhaDetalhe() {
   const [expandedAtiv, setExpandedAtiv] = useState<string | null>(null)
 
   const [allInstances, setAllInstances] = useState<Instance[]>([])
-  const [showAddInst, setShowAddInst] = useState(false)
 
   const [showAddGrupos, setShowAddGrupos] = useState(false)
   const [selectedInst, setSelectedInst] = useState('')
@@ -296,43 +295,35 @@ export default function CampanhaDetalhe() {
 
           {/* Instâncias */}
           <div className="bg-card border border-border rounded-xl p-5">
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-medium text-white">Instâncias</p>
-              <button
-                onClick={() => setShowAddInst(!showAddInst)}
-                className="text-xs text-accent hover:text-accent-hover transition-colors"
-              >
-                {showAddInst ? 'Fechar' : 'Gerenciar'}
-              </button>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-medium text-white">Instâncias da campanha</p>
+              <p className="text-xs text-muted">Clique para ativar/desativar</p>
             </div>
-            {showAddInst ? (
-              <div className="flex flex-wrap gap-2">
-                {connectedInstances.length === 0 && <span className="text-muted text-sm">Nenhuma instância conectada</span>}
-                {connectedInstances.map(inst => (
-                  <button
-                    key={inst.name}
-                    onClick={() => toggleInstancia(inst.name)}
-                    className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
-                      campanha.instancias?.includes(inst.name)
-                        ? 'bg-accent text-black border-accent'
-                        : 'bg-surface-2 border-border text-muted hover:text-white hover:border-border-2'
-                    }`}
-                  >
-                    {inst.name}
-                  </button>
-                ))}
-              </div>
+            {connectedInstances.length === 0 ? (
+              <p className="text-sm text-muted">Nenhuma instância WhatsApp conectada.</p>
             ) : (
               <div className="flex flex-wrap gap-2">
-                {!campanha.instancias?.length
-                  ? <span className="text-sm text-muted">Nenhuma instância adicionada. Clique em Gerenciar.</span>
-                  : campanha.instancias.map(inst => (
-                    <span key={inst} className="px-3 py-1 rounded-lg bg-accent/10 border border-accent/20 text-accent text-sm">
-                      {inst}
-                    </span>
-                  ))
-                }
+                {connectedInstances.map(inst => {
+                  const ativa = campanha.instancias?.includes(inst.name)
+                  return (
+                    <button
+                      key={inst.name}
+                      onClick={() => toggleInstancia(inst.name)}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-medium transition-all ${
+                        ativa
+                          ? 'bg-accent text-black border-accent'
+                          : 'bg-surface-2 border-border text-muted hover:text-white hover:border-border-2'
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${ativa ? 'bg-black/40' : 'bg-green-400'}`} />
+                      {inst.name}
+                    </button>
+                  )
+                })}
               </div>
+            )}
+            {!campanha.instancias?.length && connectedInstances.length > 0 && (
+              <p className="text-xs text-muted mt-2">Nenhuma instância selecionada ainda.</p>
             )}
           </div>
 
@@ -635,6 +626,9 @@ export default function CampanhaDetalhe() {
                           className="accent-accent w-4 h-4 flex-shrink-0"
                         />
                         <span className="text-sm text-white flex-1 truncate">{g.subject}</span>
+                        {g.size != null && !jaAdicionado && (
+                          <span className="text-[11px] text-muted flex-shrink-0">{g.size} part.</span>
+                        )}
                         {jaAdicionado && <span className="text-xs text-muted">já adicionado</span>}
                       </label>
                     )

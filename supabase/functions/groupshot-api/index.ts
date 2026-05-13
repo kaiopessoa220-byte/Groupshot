@@ -53,6 +53,29 @@ serve(async (req: Request) => {
     }
   }
 
+  // POST /instance/create
+  if (req.method === 'POST' && path === '/instance/create') {
+    let body: { instanceName: string }
+    try { body = await req.json() } catch { return err('JSON inválido') }
+    if (!body.instanceName?.trim()) return err('instanceName obrigatório')
+    try {
+      const res = await fetch(`${EVOLUTION_URL}/instance/create`, {
+        method: 'POST',
+        headers: evolutionHeaders(),
+        body: JSON.stringify({
+          instanceName: body.instanceName.trim(),
+          qrcode: true,
+          integration: 'WHATSAPP-BAILEYS',
+        }),
+      })
+      if (!res.ok) return err('Erro ao criar instância: ' + res.status, 500)
+      const data = await res.json()
+      return json(data, 201)
+    } catch (e) {
+      return err('Erro ao criar instância: ' + (e as Error).message, 500)
+    }
+  }
+
   // GET /instance/qrcode/:name
   const qrcodeMatch = path.match(/^\/instance\/qrcode\/(.+)$/)
   if (req.method === 'GET' && qrcodeMatch) {
