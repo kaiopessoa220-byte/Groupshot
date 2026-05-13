@@ -4,7 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
 }
 
 const EVOLUTION_URL = Deno.env.get('EVOLUTION_API_URL') ?? ''
@@ -193,6 +193,87 @@ serve(async (req: Request) => {
 
     if (histErr) return err('Erro ao buscar histórico: ' + histErr.message, 500)
     return json(data)
+  }
+
+  // --- CAMPANHAS ---
+
+  // GET /campanhas
+  if (req.method === 'GET' && path === '/campanhas') {
+    const db = supabaseAdmin()
+    const { data, error } = await db
+      .from('campanhas')
+      .select('*, campanha_grupos(*)')
+      .order('criado_em', { ascending: false })
+    if (error) return err('Erro ao buscar campanhas: ' + error.message, 500)
+    return json(data)
+  }
+
+  // POST /campanhas
+  if (req.method === 'POST' && path === '/campanhas') {
+    let body: { nome: string; descricao?: string }
+    try { body = await req.json() } catch { return err('JSON inválido') }
+    if (!body.nome?.trim()) return err('Nome obrigatório')
+    const db = supabaseAdmin()
+    const { data, error } = await db
+      .from('campanhas')
+      .insert({ nome: body.nome.trim(), descricao: body.descricao ?? '' })
+      .select()
+      .single()
+    if (error) return err('Erro ao criar campanha: ' + error.message, 500)
+    return json(data, 201)
+  }
+
+  // DELETE /campanhas/:id
+  const deleteCampanha = path.match(/^\/campanhas\/([^/]+)$/)
+  if (req.method === 'DELETE' && deleteCampanha) {
+    const id = deleteCampanha[1]
+    const db = supabaseAdmin()
+    const { error } = await db.from('campanhas').delete().eq('id', id)
+    if (error) return err('Erro ao deletar campanha: ' + error.message, 500)
+    return json({ ok: true })
+  }
+
+  // POST /campanhas/:id/grupos — adiciona grupos à campanha
+  const addGrupos = path.match(/^\/campanhas\/([^/]+)\/grupos$/)
+  if (req.method === 'POST' && addGrupos) {
+    const campanhaId = addGrupos[1]
+    let body: { grupos: { group_id: string; group_name: string; instancia: string }[] }
+    try { body = await req.json() } catch { return err('JSON inválido') }
+    if (!body.grupos?.length) return err('grupos obrigatório')
+    const db = supabaseAdmin()
+    const rows = body.grupos.map(g => ({
+      campanha_id: campanhaId,
+      group_id: g.group_id,
+      group_name: g.group_name,
+      instancia: g.instancia,
+    }))
+    const { data, error } = await db.from('campanha_grupos').insert(rows).select()
+    if (error) return err('Erro ao adicionar grupos: ' + error.message, 500)
+    return json(data, 201)
+  }
+
+  // DELETE /campanha-grupos/:id — remove grupo de campanha
+  const deleteGrupo = path.match(/^\/campanha-grupos\/([^/]+)$/)
+  if (req.method === 'DELETE' && deleteGrupo) {
+    const id = deleteGrupo[1]
+    const db = supabaseAdmin()
+    const { error } = await db.from('campanha_grupos').delete().eq('id', id)
+    if (error) return err('Erro ao remover grupo: ' + error.message, 500)
+    return json({ ok: true })
+  }
+
+  // GET /visao-geral
+  if (req.method === 'GET' && path === '/visao-geral') {
+    const db = supabaseAdmin()
+    const [{ count: totalCampanhas }, { data: disparoStats }] = await Promise.all([
+      db.from('campanhas').select('*', { count: 'exact', head: true }),
+      db.from('disparos').select('status'),
+    ])
+    const stats = { agendado: 0, disparando: 0, concluido: 0, falhou: 0 }
+    for (const d of disparoStats ?? []) {
+      if (d.status in stats) stats[d.status as keyof typeof stats]++
+    }
+    return json({ totalCampanhas: totalCampanhas ?? 0, disparos: stats })
   }
 
   return err('Not found', 404)

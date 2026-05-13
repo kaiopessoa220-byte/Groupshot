@@ -89,6 +89,74 @@ export async function fetchHistory(): Promise<Disparo[]> {
   return res.json()
 }
 
+// --- Campanhas ---
+
+export interface CampanhaGrupo {
+  id: string
+  campanha_id: string
+  group_id: string
+  group_name: string
+  instancia: string
+}
+
+export interface Campanha {
+  id: string
+  nome: string
+  descricao: string
+  criado_em: string
+  campanha_grupos: CampanhaGrupo[]
+}
+
+export async function fetchCampanhas(): Promise<Campanha[]> {
+  const res = await fetch(`${API_BASE}/campanhas`, { headers: headers() })
+  if (!res.ok) throw new Error('Erro ao buscar campanhas')
+  return res.json()
+}
+
+export async function createCampanha(nome: string, descricao?: string): Promise<Campanha> {
+  const res = await fetch(`${API_BASE}/campanhas`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify({ nome, descricao }),
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
+}
+
+export async function deleteCampanha(id: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/campanhas/${id}`, { method: 'DELETE', headers: headers() })
+  if (!res.ok) throw new Error(await res.text())
+}
+
+export async function addGruposToCampanha(
+  campanhaId: string,
+  grupos: { group_id: string; group_name: string; instancia: string }[]
+): Promise<CampanhaGrupo[]> {
+  const res = await fetch(`${API_BASE}/campanhas/${campanhaId}/grupos`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify({ grupos }),
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
+}
+
+export async function removeGrupoDaCampanha(id: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/campanha-grupos/${id}`, { method: 'DELETE', headers: headers() })
+  if (!res.ok) throw new Error(await res.text())
+}
+
+export interface VisaoGeral {
+  totalCampanhas: number
+  disparos: { agendado: number; disparando: number; concluido: number; falhou: number }
+}
+
+export async function fetchVisaoGeral(): Promise<VisaoGeral> {
+  const res = await fetch(`${API_BASE}/visao-geral`, { headers: headers() })
+  if (!res.ok) throw new Error('Erro ao buscar visão geral')
+  return res.json()
+}
+
 export async function uploadImage(file: File): Promise<string> {
   const ext = file.name.split('.').pop()
   const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`

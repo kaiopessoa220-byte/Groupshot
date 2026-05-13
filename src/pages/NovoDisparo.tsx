@@ -116,7 +116,7 @@ export default function NovoDisparo() {
         instancias: selectedInstances,
       })
 
-      navigate('/historico')
+      navigate('/historico', { replace: true })
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Erro desconhecido')
     } finally {
