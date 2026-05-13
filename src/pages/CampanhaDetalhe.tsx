@@ -109,6 +109,29 @@ export default function CampanhaDetalhe() {
     } finally { setSalvandoGrupos(false) }
   }
 
+  // Upload de foto da campanha
+  const [uploadingFoto, setUploadingFoto] = useState(false)
+  const fotoInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFotoUpload = async (file: File) => {
+    if (!campanha || !file.type.startsWith('image/')) return
+    setUploadingFoto(true)
+    try {
+      const url = await uploadImage(file)
+      const updated = await updateCampanha(campanha.id, { foto_url: url })
+      setCampanha(updated)
+    } catch { setError('Erro ao salvar foto') }
+    finally { setUploadingFoto(false) }
+  }
+
+  const handleRemoveFoto = async () => {
+    if (!campanha) return
+    try {
+      const updated = await updateCampanha(campanha.id, { foto_url: '' })
+      setCampanha(updated)
+    } catch { setError('Erro ao remover foto') }
+  }
+
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) return
     setImageFile(file)
@@ -212,6 +235,52 @@ export default function CampanhaDetalhe() {
       {/* === VISÃO GERAL === */}
       {tab === 'visao-geral' && (
         <div className="space-y-6">
+          {/* Foto da campanha */}
+          <div className="flex items-center gap-4">
+            <div className="relative flex-shrink-0">
+              {campanha.foto_url ? (
+                <img
+                  src={campanha.foto_url}
+                  alt={campanha.nome}
+                  className="w-16 h-16 rounded-xl object-cover border border-border"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-xl bg-surface-2 border border-border flex items-center justify-center">
+                  <svg width="20" height="20" fill="none" stroke="#71717a" strokeWidth="1.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-medium text-white mb-1">{campanha.nome}</p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => fotoInputRef.current?.click()}
+                  disabled={uploadingFoto}
+                  className="text-xs text-accent hover:text-accent-hover transition-colors disabled:opacity-50"
+                >
+                  {uploadingFoto ? 'Salvando...' : campanha.foto_url ? 'Alterar foto' : 'Adicionar foto'}
+                </button>
+                {campanha.foto_url && (
+                  <>
+                    <span className="text-muted text-xs">·</span>
+                    <button onClick={handleRemoveFoto} className="text-xs text-muted hover:text-red-400 transition-colors">
+                      Remover
+                    </button>
+                  </>
+                )}
+              </div>
+              <input
+                ref={fotoInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) handleFotoUpload(f) }}
+              />
+            </div>
+          </div>
+
           <div className="grid grid-cols-3 gap-3">
             {[
               { label: 'Grupos', value: campanha.campanha_grupos.length },

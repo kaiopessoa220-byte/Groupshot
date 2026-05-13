@@ -15,6 +15,7 @@ export interface Instance {
 export interface Group {
   id: string
   subject: string
+  size?: number
 }
 
 export interface Disparo {
@@ -51,10 +52,18 @@ export async function fetchInstances(): Promise<Instance[]> {
   return res.json()
 }
 
-export async function fetchGroups(instance: string): Promise<Group[]> {
-  const res = await fetch(`${API_BASE}/groups?instance=${encodeURIComponent(instance)}`, {
+export async function fetchQRCode(instanceName: string): Promise<{ base64: string | null; code: string | null }> {
+  const res = await fetch(`${API_BASE}/instance/qrcode/${encodeURIComponent(instanceName)}`, {
     headers: headers(),
   })
+  if (!res.ok) throw new Error('Erro ao buscar QR Code')
+  return res.json()
+}
+
+export async function fetchGroups(instance: string, withParticipants = false): Promise<Group[]> {
+  const params = new URLSearchParams({ instance })
+  if (withParticipants) params.set('participants', 'true')
+  const res = await fetch(`${API_BASE}/groups?${params}`, { headers: headers() })
   if (!res.ok) throw new Error('Erro ao buscar grupos')
   return res.json()
 }
@@ -77,8 +86,8 @@ export async function dispatch(payload: DispatchPayload): Promise<{ id: string }
     body: JSON.stringify(payload),
   })
   if (!res.ok) {
-    const err = await res.text()
-    throw new Error(err || 'Erro ao criar disparo')
+    const e = await res.text()
+    throw new Error(e || 'Erro ao criar disparo')
   }
   return res.json()
 }
@@ -104,6 +113,7 @@ export interface Campanha {
   nome: string
   descricao: string
   instancias: string[]
+  foto_url: string
   criado_em: string
   campanha_grupos: CampanhaGrupo[]
 }
@@ -130,7 +140,10 @@ export async function fetchCampanha(id: string): Promise<Campanha> {
   return res.json()
 }
 
-export async function updateCampanha(id: string, data: { nome?: string; instancias?: string[] }): Promise<Campanha> {
+export async function updateCampanha(
+  id: string,
+  data: { nome?: string; instancias?: string[]; foto_url?: string }
+): Promise<Campanha> {
   const res = await fetch(`${API_BASE}/campanhas/${id}`, {
     method: 'PATCH',
     headers: headers(),
@@ -160,7 +173,10 @@ export interface DispararCampanhaPayload {
   agendadoPara: string
 }
 
-export async function dispararCampanha(campanhaId: string, payload: DispararCampanhaPayload): Promise<{ id: string; itens: number }> {
+export async function dispararCampanha(
+  campanhaId: string,
+  payload: DispararCampanhaPayload
+): Promise<{ id: string; itens: number }> {
   const res = await fetch(`${API_BASE}/campanhas/${campanhaId}/disparar`, {
     method: 'POST',
     headers: headers(),

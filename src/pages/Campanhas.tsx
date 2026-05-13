@@ -65,7 +65,10 @@ export default function Campanhas() {
       )}
 
       {loading ? (
-        <div className="text-muted text-sm">Carregando...</div>
+        <div className="flex items-center gap-2 text-muted text-sm">
+          <div className="w-4 h-4 border-2 border-border border-t-accent rounded-full animate-spin" />
+          Carregando...
+        </div>
       ) : campanhas.length === 0 ? (
         <div className="bg-card border border-border rounded-xl px-6 py-16 text-center">
           <div className="w-10 h-10 rounded-xl bg-surface-2 border border-border flex items-center justify-center mx-auto mb-4">
@@ -94,19 +97,29 @@ export default function Campanhas() {
               <div
                 key={campanha.id}
                 onClick={() => navigate(`/campanhas/${campanha.id}`)}
-                className="grid grid-cols-[1fr_80px_80px_40px] items-center px-5 py-3.5 cursor-pointer hover:bg-surface transition-colors group"
+                className="grid grid-cols-[1fr_80px_80px_40px] items-center px-5 py-3 cursor-pointer hover:bg-surface transition-colors group"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
-                    <svg width="12" height="12" fill="none" stroke="#f5c518" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                    </svg>
-                  </div>
+                  {/* Foto ou ícone */}
+                  {campanha.foto_url ? (
+                    <img
+                      src={campanha.foto_url}
+                      alt={campanha.nome}
+                      className="w-8 h-8 rounded-lg object-cover flex-shrink-0"
+                      onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
+                      <svg width="12" height="12" fill="none" stroke="#f5c518" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                      </svg>
+                    </div>
+                  )}
                   <span className="text-sm font-medium text-white truncate">{campanha.nome}</span>
                 </div>
                 <span className="text-sm text-secondary text-center">{campanha.campanha_grupos.length}</span>
                 <span className="text-sm text-secondary text-center">{campanha.instancias?.length ?? 0}</span>
-                <div className="flex items-center justify-end gap-1">
+                <div className="flex items-center justify-end">
                   <button
                     onClick={e => handleDelete(e, campanha.id)}
                     className="p-1.5 text-muted hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
@@ -138,17 +151,10 @@ export default function Campanhas() {
               className="input mb-4"
             />
             <div className="flex gap-2">
-              <button
-                onClick={() => { setShowNova(false); setNovoNome('') }}
-                className="btn-secondary flex-1 py-2.5"
-              >
+              <button onClick={() => { setShowNova(false); setNovoNome('') }} className="btn-secondary flex-1 py-2.5">
                 Cancelar
               </button>
-              <button
-                onClick={handleCriar}
-                disabled={criando || !novoNome.trim()}
-                className="btn-primary flex-1 py-2.5"
-              >
+              <button onClick={handleCriar} disabled={criando || !novoNome.trim()} className="btn-primary flex-1 py-2.5">
                 {criando ? 'Criando...' : 'Criar'}
               </button>
             </div>
