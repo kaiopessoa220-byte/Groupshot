@@ -154,14 +154,14 @@ serve(async (req: Request) => {
       })
     }
 
-    const { error: itensErr } = await db.from('disparo_itens').insert(itens)
-    if (itensErr) {
-      return err('Erro ao salvar itens: ' + itensErr.message, 500)
+    const { data: insertedItens, error: itensErr } = await db.from('disparo_itens').insert(itens).select()
+    if (itensErr || !insertedItens) {
+      return err('Erro ao salvar itens: ' + itensErr?.message, 500)
     }
 
     // Dispara para n8n dispatcher (fire-and-forget)
     if (N8N_DISPATCHER) {
-      for (const item of itens) {
+      for (const item of insertedItens) {
         fetch(N8N_DISPATCHER, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -173,7 +173,7 @@ serve(async (req: Request) => {
             imageUrl: imageUrl ?? '',
             imageMimetype: imageMimetype ?? 'image/jpeg',
             mentionAll,
-            disparoItemId: item.disparo_id,
+            disparoItemId: item.id,
           }),
         }).catch(() => { /* ignora erros de rede */ })
       }
