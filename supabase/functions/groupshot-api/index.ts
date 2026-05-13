@@ -204,7 +204,7 @@ serve(async (req: Request) => {
       .from('campanhas')
       .select('*, campanha_grupos(*)')
       .order('criado_em', { ascending: false })
-    if (error) return err('Erro ao buscar campanhas: ' + error.message, 500)
+    if (error) return err('Erro: ' + error.message, 500)
     return json(data)
   }
 
@@ -216,49 +216,142 @@ serve(async (req: Request) => {
     const db = supabaseAdmin()
     const { data, error } = await db
       .from('campanhas')
-      .insert({ nome: body.nome.trim(), descricao: body.descricao ?? '' })
+      .insert({ nome: body.nome.trim(), descricao: body.descricao ?? '', instancias: [] })
       .select()
       .single()
-    if (error) return err('Erro ao criar campanha: ' + error.message, 500)
+    if (error) return err('Erro: ' + error.message, 500)
     return json(data, 201)
   }
 
-  // DELETE /campanhas/:id
-  const deleteCampanha = path.match(/^\/campanhas\/([^/]+)$/)
-  if (req.method === 'DELETE' && deleteCampanha) {
-    const id = deleteCampanha[1]
+  // GET /campanhas/:id
+  const campanhaId = path.match(/^\/campanhas\/([^/]+)$/)
+  if (req.method === 'GET' && campanhaId) {
     const db = supabaseAdmin()
-    const { error } = await db.from('campanhas').delete().eq('id', id)
-    if (error) return err('Erro ao deletar campanha: ' + error.message, 500)
+    const { data, error } = await db
+      .from('campanhas')
+      .select('*, campanha_grupos(*)')
+      .eq('id', campanhaId[1])
+      .single()
+    if (error) return err('Erro: ' + error.message, 500)
+    return json(data)
+  }
+
+  // PATCH /campanhas/:id — atualiza nome/instâncias
+  if (req.method === 'PATCH' && campanhaId) {
+    let body: { nome?: string; instancias?: string[] }
+    try { body = await req.json() } catch { return err('JSON inválido') }
+    const db = supabaseAdmin()
+    const { data, error } = await db
+      .from('campanhas')
+      .update({ ...(body.nome && { nome: body.nome }), ...(body.instancias !== undefined && { instancias: body.instancias }) })
+      .eq('id', campanhaId[1])
+      .select()
+      .single()
+    if (error) return err('Erro: ' + error.message, 500)
+    return json(data)
+  }
+
+  // DELETE /campanhas/:id
+  if (req.method === 'DELETE' && campanhaId) {
+    const db = supabaseAdmin()
+    const { error } = await db.from('campanhas').delete().eq('id', campanhaId[1])
+    if (error) return err('Erro: ' + error.message, 500)
     return json({ ok: true })
   }
 
-  // POST /campanhas/:id/grupos — adiciona grupos à campanha
+  // GET /campanhas/:id/atividades
+  const atividadesMatch = path.match(/^\/campanhas\/([^/]+)\/atividades$/)
+  if (req.method === 'GET' && atividadesMatch) {
+    const db = supabaseAdmin()
+    const { data, error } = await db
+      .from('disparos')
+      .select('*, disparo_itens(*)')
+      .eq('campanha_id', atividadesMatch[1])
+      .order('criado_em', { ascending: false })
+      .limit(50)
+    if (error) return err('Erro: ' + error.message, 500)
+    return json(data ?? [])
+  }
+
+  // POST /campanhas/:id/disparar
+  const dispararMatch = path.match(/^\/campanhas\/([^/]+)\/disparar$/)
+  if (req.method === 'POST' && dispararMatch) {
+    const cId = dispararMatch[1]
+    let body: { nome?: string; mensagem: string; imageUrl?: string; imageMimetype?: string; mentionAll: boolean; agendadoPara: string }
+    try { body = await req.json() } catch { return err('JSON inválido') }
+    if (!body.mensagem) return err('mensagem obrigatória')
+
+    const db = supabaseAdmin()
+    const { data: campanha, error: cErr } = await db
+      .from('campanhas')
+      .select('*, campanha_grupos(*)')
+      .eq('id', cId)
+      .single()
+    if (cErr || !campanha) return err('Campanha não encontrada', 404)
+    if (!campanha.campanha_grupos?.length) return err('Campanha sem grupos')
+    if (!campanha.instancias?.length) return err('Campanha sem instâncias')
+
+    const { mensagem, imageUrl, imageMimetype, mentionAll, agendadoPara } = body
+    const baseTime = new Date(agendadoPara).getTime()
+
+    const { data: disparo, error: dErr } = await db
+      .from('disparos')
+      .insert({
+        nome: body.nome || campanha.nome,
+        mensagem,
+        image_url: imageUrl ?? '',
+        image_mimetype: imageMimetype ?? '',
+        mention_all: mentionAll,
+        agendado_para: new Date(baseTime).toISOString(),
+        status: 'agendado',
+        total_grupos: campanha.campanha_grupos.length,
+        campanha_id: cId,
+      })
+      .select()
+      .single()
+    if (dErr || !disparo) return err('Erro ao salvar: ' + dErr?.message, 500)
+
+    let acumulado = 0
+    const itens = campanha.campanha_grupos.map((g: { group_id: string; group_name: string; instancia: string }, i: number) => {
+      if (i > 0) acumulado += 40000 + Math.floor(Math.random() * 20001)
+      const instancia = campanha.instancias[Math.floor(Math.random() * campanha.instancias.length)]
+      return { disparo_id: disparo.id, group_id: g.group_id, group_name: g.group_name, instancia, send_at: new Date(baseTime + acumulado).toISOString(), status: 'pendente' }
+    })
+
+    const { data: insertedItens, error: iErr } = await db.from('disparo_itens').insert(itens).select()
+    if (iErr || !insertedItens) return err('Erro ao salvar itens: ' + iErr?.message, 500)
+
+    if (N8N_DISPATCHER) {
+      for (const item of insertedItens) {
+        fetch(N8N_DISPATCHER, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ groupId: item.group_id, instancia: item.instancia, sendAt: item.send_at, message: mensagem, imageUrl: imageUrl ?? '', imageMimetype: imageMimetype ?? 'image/jpeg', mentionAll, disparoItemId: item.id }),
+        }).catch(() => {})
+      }
+    }
+    return json({ id: disparo.id, itens: itens.length }, 201)
+  }
+
+  // POST /campanhas/:id/grupos
   const addGrupos = path.match(/^\/campanhas\/([^/]+)\/grupos$/)
   if (req.method === 'POST' && addGrupos) {
-    const campanhaId = addGrupos[1]
     let body: { grupos: { group_id: string; group_name: string; instancia: string }[] }
     try { body = await req.json() } catch { return err('JSON inválido') }
     if (!body.grupos?.length) return err('grupos obrigatório')
     const db = supabaseAdmin()
-    const rows = body.grupos.map(g => ({
-      campanha_id: campanhaId,
-      group_id: g.group_id,
-      group_name: g.group_name,
-      instancia: g.instancia,
-    }))
+    const rows = body.grupos.map(g => ({ campanha_id: addGrupos[1], group_id: g.group_id, group_name: g.group_name, instancia: g.instancia }))
     const { data, error } = await db.from('campanha_grupos').insert(rows).select()
-    if (error) return err('Erro ao adicionar grupos: ' + error.message, 500)
+    if (error) return err('Erro: ' + error.message, 500)
     return json(data, 201)
   }
 
-  // DELETE /campanha-grupos/:id — remove grupo de campanha
+  // DELETE /campanha-grupos/:id
   const deleteGrupo = path.match(/^\/campanha-grupos\/([^/]+)$/)
   if (req.method === 'DELETE' && deleteGrupo) {
-    const id = deleteGrupo[1]
     const db = supabaseAdmin()
-    const { error } = await db.from('campanha_grupos').delete().eq('id', id)
-    if (error) return err('Erro ao remover grupo: ' + error.message, 500)
+    const { error } = await db.from('campanha_grupos').delete().eq('id', deleteGrupo[1])
+    if (error) return err('Erro: ' + error.message, 500)
     return json({ ok: true })
   }
 

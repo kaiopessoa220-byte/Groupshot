@@ -103,6 +103,7 @@ export interface Campanha {
   id: string
   nome: string
   descricao: string
+  instancias: string[]
   criado_em: string
   campanha_grupos: CampanhaGrupo[]
 }
@@ -123,9 +124,50 @@ export async function createCampanha(nome: string, descricao?: string): Promise<
   return res.json()
 }
 
+export async function fetchCampanha(id: string): Promise<Campanha> {
+  const res = await fetch(`${API_BASE}/campanhas/${id}`, { headers: headers() })
+  if (!res.ok) throw new Error('Erro ao buscar campanha')
+  return res.json()
+}
+
+export async function updateCampanha(id: string, data: { nome?: string; instancias?: string[] }): Promise<Campanha> {
+  const res = await fetch(`${API_BASE}/campanhas/${id}`, {
+    method: 'PATCH',
+    headers: headers(),
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
+}
+
 export async function deleteCampanha(id: string): Promise<void> {
   const res = await fetch(`${API_BASE}/campanhas/${id}`, { method: 'DELETE', headers: headers() })
   if (!res.ok) throw new Error(await res.text())
+}
+
+export async function fetchAtividades(campanhaId: string): Promise<Disparo[]> {
+  const res = await fetch(`${API_BASE}/campanhas/${campanhaId}/atividades`, { headers: headers() })
+  if (!res.ok) throw new Error('Erro ao buscar atividades')
+  return res.json()
+}
+
+export interface DispararCampanhaPayload {
+  nome?: string
+  mensagem: string
+  imageUrl?: string
+  imageMimetype?: string
+  mentionAll: boolean
+  agendadoPara: string
+}
+
+export async function dispararCampanha(campanhaId: string, payload: DispararCampanhaPayload): Promise<{ id: string; itens: number }> {
+  const res = await fetch(`${API_BASE}/campanhas/${campanhaId}/disparar`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
 }
 
 export async function addGruposToCampanha(
