@@ -3,24 +3,53 @@
 @tailwind utilities;
 
 @layer base {
-  * {
-    box-sizing: border-box;
-  }
+  * { box-sizing: border-box; }
+
+  html { font-size: 15px; }
+
   body {
-    background-color: #0f0f0f;
-    color: #ffffff;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: #0a0a0a;
+    color: #e4e4e7;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     margin: 0;
     padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  ::-webkit-scrollbar {
-    width: 6px;
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #333; border-radius: 99px; }
+
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.5);
+    cursor: pointer;
   }
-  ::-webkit-scrollbar-track {
-    background: #1a1a1a;
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-accent hover:bg-accent-hover text-black font-semibold text-sm rounded-lg transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed;
   }
-  ::-webkit-scrollbar-thumb {
-    background: #333;
-    border-radius: 3px;
+  .btn-secondary {
+    @apply px-4 py-2 bg-card border border-border hover:border-border-2 hover:bg-card-hover text-secondary hover:text-white font-medium text-sm rounded-lg transition-all duration-150;
+  }
+  .btn-ghost {
+    @apply px-3 py-1.5 text-muted hover:text-white text-sm font-medium transition-colors duration-150;
+  }
+  .input {
+    @apply w-full bg-surface-2 border border-border rounded-lg px-3 py-2.5 text-sm text-white placeholder-muted focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/20 transition-all duration-150;
+  }
+  .card {
+    @apply bg-card border border-border rounded-xl shadow-card;
+  }
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium;
+  }
+  .tab-active {
+    @apply border-b-2 border-accent text-white font-medium;
+  }
+  .tab-inactive {
+    @apply border-b-2 border-transparent text-muted hover:text-secondary transition-colors;
   }
 }

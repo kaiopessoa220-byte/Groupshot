@@ -6,29 +6,25 @@ import type { Instance, Group } from '../lib/api'
 export default function NovoDisparo() {
   const navigate = useNavigate()
 
-  // dados remotos
   const [instances, setInstances] = useState<Instance[]>([])
   const [groups, setGroups] = useState<Group[]>([])
   const [loadingInst, setLoadingInst] = useState(true)
   const [loadingGroups, setLoadingGroups] = useState(false)
 
-  // seleção
   const [selectedInstances, setSelectedInstances] = useState<string[]>([])
   const [selectedGroups, setSelectedGroups] = useState<string[]>([])
 
-  // campos
   const [nome, setNome] = useState('')
   const [mensagem, setMensagem] = useState('')
   const [mentionAll, setMentionAll] = useState(false)
   const [agendadoPara, setAgendadoPara] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [uploading, setUploading] = useState(false)
   const [sending, setSending] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [groupSearch, setGroupSearch] = useState('')
 
-  const dropRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -41,46 +37,39 @@ export default function NovoDisparo() {
   useEffect(() => {
     if (selectedInstances.length === 0) { setGroups([]); return }
     setLoadingGroups(true)
-    const inst = selectedInstances[0]
-    fetchGroups(inst)
+    fetchGroups(selectedInstances[0])
       .then(setGroups)
       .catch(() => setError('Erro ao carregar grupos'))
       .finally(() => setLoadingGroups(false))
   }, [selectedInstances])
 
   const toggleInstance = (name: string) => {
-    setSelectedInstances((prev) =>
-      prev.includes(name) ? prev.filter((i) => i !== name) : [...prev, name]
+    setSelectedInstances(prev =>
+      prev.includes(name) ? prev.filter(i => i !== name) : [...prev, name]
     )
     setSelectedGroups([])
   }
 
   const toggleGroup = (id: string) => {
-    setSelectedGroups((prev) =>
-      prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]
+    setSelectedGroups(prev =>
+      prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]
     )
   }
 
   const toggleAllGroups = () => {
-    const visible = filteredGroups.map((g) => g.id)
-    const allSelected = visible.every((id) => selectedGroups.includes(id))
+    const visible = filteredGroups.map(g => g.id)
+    const allSelected = visible.every(id => selectedGroups.includes(id))
     if (allSelected) {
-      setSelectedGroups((prev) => prev.filter((id) => !visible.includes(id)))
+      setSelectedGroups(prev => prev.filter(id => !visible.includes(id)))
     } else {
-      setSelectedGroups((prev) => [...new Set([...prev, ...visible])])
+      setSelectedGroups(prev => [...new Set([...prev, ...visible])])
     }
   }
 
-  const handleFile = (file: File) => {
+  const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) return
     setImageFile(file)
     setImagePreview(URL.createObjectURL(file))
-  }
-
-  const onDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    const file = e.dataTransfer.files[0]
-    if (file) handleFile(file)
   }, [])
 
   const handleSend = async (sendNow: boolean) => {
@@ -100,11 +89,7 @@ export default function NovoDisparo() {
         imageMimetype = imageFile.type
         setUploading(false)
       }
-
-      const baseTime = sendNow
-        ? new Date().toISOString()
-        : new Date(agendadoPara).toISOString()
-
+      const baseTime = sendNow ? new Date().toISOString() : new Date(agendadoPara).toISOString()
       await dispatch({
         nome: nome || 'Disparo sem nome',
         mensagem,
@@ -115,7 +100,6 @@ export default function NovoDisparo() {
         groupIds: selectedGroups,
         instancias: selectedInstances,
       })
-
       navigate('/historico', { replace: true })
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Erro desconhecido')
@@ -125,56 +109,56 @@ export default function NovoDisparo() {
     }
   }
 
-  const filteredGroups = groups.filter((g) =>
+  const filteredGroups = groups.filter(g =>
     g.subject.toLowerCase().includes(groupSearch.toLowerCase())
   )
-
-  const connectedInstances = instances.filter((i) => i.connectionStatus === 'open')
+  const connectedInstances = instances.filter(i => i.connectionStatus === 'open')
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-xl font-bold mb-1">Novo Disparo</h1>
-      <p className="text-muted text-sm mb-6">Configure e envie mensagens para grupos WhatsApp</p>
+    <div className="p-8 max-w-2xl mx-auto">
+      {/* Header */}
+      <div className="mb-8">
+        <p className="text-xs text-muted uppercase tracking-widest mb-1.5">Envio</p>
+        <h1 className="text-2xl font-semibold text-white tracking-tight">Novo Disparo</h1>
+      </div>
 
       {error && (
-        <div className="mb-4 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
-          {error}
-        </div>
+        <div className="mb-5 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{error}</div>
       )}
 
-      <div className="space-y-5">
+      <div className="space-y-6">
         {/* Nome */}
         <div>
-          <label className="block text-sm font-medium mb-1.5">Nome do disparo</label>
+          <label className="block text-xs text-muted uppercase tracking-wider mb-2">Nome do disparo</label>
           <input
             type="text"
-            placeholder="Ex: Promoção maio"
+            placeholder="Ex: Promoção de maio"
             value={nome}
-            onChange={(e) => setNome(e.target.value)}
-            className="w-full bg-card border border-border rounded-lg px-3 py-2.5 text-sm text-white placeholder-muted focus:outline-none focus:border-accent transition-colors"
+            onChange={e => setNome(e.target.value)}
+            className="input"
           />
         </div>
 
         {/* Instâncias */}
         <div>
-          <label className="block text-sm font-medium mb-1.5">
-            Instâncias <span className="text-muted text-xs">(selecione uma ou mais)</span>
+          <label className="block text-xs text-muted uppercase tracking-wider mb-2">
+            Instâncias
+            {selectedInstances.length > 0 && <span className="text-accent ml-2 normal-case">{selectedInstances.length} selecionada(s)</span>}
           </label>
           {loadingInst ? (
-            <div className="text-muted text-sm">Carregando instâncias...</div>
+            <div className="text-muted text-sm">Carregando...</div>
+          ) : connectedInstances.length === 0 ? (
+            <p className="text-sm text-muted">Nenhuma instância conectada.</p>
           ) : (
             <div className="flex flex-wrap gap-2">
-              {connectedInstances.length === 0 && (
-                <span className="text-muted text-sm">Nenhuma instância conectada</span>
-              )}
-              {connectedInstances.map((inst) => (
+              {connectedInstances.map(inst => (
                 <button
                   key={inst.name}
                   onClick={() => toggleInstance(inst.name)}
                   className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
                     selectedInstances.includes(inst.name)
                       ? 'bg-accent text-black border-accent'
-                      : 'bg-card border-border text-muted hover:text-white hover:border-zinc-500'
+                      : 'bg-surface-2 border-border text-muted hover:text-white hover:border-border-2'
                   }`}
                 >
                   {inst.name}
@@ -186,57 +170,53 @@ export default function NovoDisparo() {
 
         {/* Grupos */}
         <div>
-          <label className="block text-sm font-medium mb-1.5">
-            Grupos{' '}
-            {selectedGroups.length > 0 && (
-              <span className="text-accent text-xs">{selectedGroups.length} selecionado(s)</span>
-            )}
+          <label className="block text-xs text-muted uppercase tracking-wider mb-2">
+            Grupos
+            {selectedGroups.length > 0 && <span className="text-accent ml-2 normal-case">{selectedGroups.length} selecionado(s)</span>}
           </label>
-
           {selectedInstances.length === 0 ? (
-            <div className="bg-card border border-border rounded-lg px-4 py-6 text-center text-muted text-sm">
+            <div className="bg-surface-2 border border-border rounded-xl px-4 py-5 text-center text-sm text-muted">
               Selecione uma instância primeiro
             </div>
           ) : loadingGroups ? (
-            <div className="bg-card border border-border rounded-lg px-4 py-6 text-center text-muted text-sm">
+            <div className="bg-surface-2 border border-border rounded-xl px-4 py-5 text-center text-sm text-muted flex items-center justify-center gap-2">
+              <div className="w-3.5 h-3.5 border-2 border-border border-t-accent rounded-full animate-spin" />
               Carregando grupos...
             </div>
           ) : (
-            <div className="bg-card border border-border rounded-lg overflow-hidden">
-              <div className="px-3 py-2 border-b border-border flex items-center gap-2">
-                <svg width="14" height="14" fill="none" stroke="#888" strokeWidth="2" viewBox="0 0 24 24">
+            <div className="bg-surface-2 border border-border rounded-xl overflow-hidden">
+              <div className="px-3 py-2.5 border-b border-border flex items-center gap-2">
+                <svg width="13" height="13" fill="none" stroke="#71717a" strokeWidth="2" viewBox="0 0 24 24">
                   <circle cx="11" cy="11" r="8" /><path strokeLinecap="round" d="M21 21l-4.35-4.35" />
                 </svg>
                 <input
                   type="text"
                   placeholder="Buscar grupo..."
                   value={groupSearch}
-                  onChange={(e) => setGroupSearch(e.target.value)}
+                  onChange={e => setGroupSearch(e.target.value)}
                   className="flex-1 bg-transparent text-sm text-white placeholder-muted focus:outline-none"
                 />
                 <button
                   onClick={toggleAllGroups}
-                  className="text-xs text-accent hover:underline ml-2 whitespace-nowrap"
+                  className="text-xs text-accent hover:text-accent-hover transition-colors whitespace-nowrap"
                 >
-                  {filteredGroups.every((g) => selectedGroups.includes(g.id))
-                    ? 'Desmarcar todos'
-                    : 'Selecionar todos'}
+                  {filteredGroups.every(g => selectedGroups.includes(g.id)) ? 'Desmarcar todos' : 'Selecionar todos'}
                 </button>
               </div>
               <div className="max-h-52 overflow-y-auto divide-y divide-border">
                 {filteredGroups.length === 0 && (
                   <div className="px-4 py-4 text-muted text-sm text-center">Nenhum grupo encontrado</div>
                 )}
-                {filteredGroups.map((g) => (
+                {filteredGroups.map(g => (
                   <label
                     key={g.id}
-                    className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-surface transition-colors"
+                    className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-surface transition-colors"
                   >
                     <input
                       type="checkbox"
                       checked={selectedGroups.includes(g.id)}
                       onChange={() => toggleGroup(g.id)}
-                      className="accent-accent w-4 h-4"
+                      className="accent-accent w-4 h-4 flex-shrink-0"
                     />
                     <span className="text-sm text-white">{g.subject}</span>
                   </label>
@@ -248,42 +228,44 @@ export default function NovoDisparo() {
 
         {/* Mensagem */}
         <div>
-          <label className="block text-sm font-medium mb-1.5">Mensagem</label>
+          <label className="block text-xs text-muted uppercase tracking-wider mb-2">Mensagem</label>
           <textarea
             placeholder="Digite a mensagem aqui..."
             value={mensagem}
-            onChange={(e) => setMensagem(e.target.value)}
+            onChange={e => setMensagem(e.target.value)}
             rows={5}
-            className="w-full bg-card border border-border rounded-lg px-3 py-2.5 text-sm text-white placeholder-muted focus:outline-none focus:border-accent transition-colors resize-none"
+            className="input resize-none"
           />
-          <p className="text-xs text-muted mt-1">{mensagem.length} caracteres</p>
+          <p className="text-xs text-muted mt-1.5">{mensagem.length} caracteres</p>
         </div>
 
-        {/* Upload imagem */}
+        {/* Imagem */}
         <div>
-          <label className="block text-sm font-medium mb-1.5">Imagem <span className="text-muted text-xs">(opcional)</span></label>
+          <label className="block text-xs text-muted uppercase tracking-wider mb-2">
+            Imagem <span className="normal-case">(opcional)</span>
+          </label>
           <div
-            ref={dropRef}
-            onDrop={onDrop}
-            onDragOver={(e) => e.preventDefault()}
+            onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }}
+            onDragOver={e => e.preventDefault()}
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-accent/50 transition-colors"
+            className="border border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-border-2 transition-colors"
           >
             {imagePreview ? (
               <div className="relative inline-block">
-                <img src={imagePreview} alt="preview" className="max-h-32 rounded mx-auto" />
+                <img src={imagePreview} alt="preview" className="max-h-28 rounded-lg mx-auto" />
                 <button
-                  onClick={(e) => { e.stopPropagation(); setImageFile(null); setImagePreview(null) }}
+                  onClick={e => { e.stopPropagation(); setImageFile(null); setImagePreview(null) }}
                   className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
-                >
-                  ×
-                </button>
+                >×</button>
               </div>
             ) : (
-              <>
-                <div className="text-muted text-sm">Arraste uma imagem ou clique para selecionar</div>
-                <div className="text-muted text-xs mt-1">PNG, JPG, GIF, WEBP</div>
-              </>
+              <div>
+                <svg width="20" height="20" fill="none" stroke="#71717a" strokeWidth="1.5" viewBox="0 0 24 24" className="mx-auto mb-2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p className="text-sm text-muted">Arraste uma imagem ou clique para selecionar</p>
+                <p className="text-xs text-muted mt-0.5">PNG, JPG, GIF, WEBP</p>
+              </div>
             )}
           </div>
           <input
@@ -291,51 +273,55 @@ export default function NovoDisparo() {
             type="file"
             accept="image/*"
             className="hidden"
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
+            onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
           />
         </div>
 
         {/* Mencionar todos */}
-        <label className="flex items-center gap-3 cursor-pointer">
+        <label className="flex items-center gap-3 cursor-pointer select-none">
           <div
             onClick={() => setMentionAll(!mentionAll)}
-            className={`relative w-10 h-5 rounded-full transition-colors ${mentionAll ? 'bg-accent' : 'bg-border'}`}
+            className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${mentionAll ? 'bg-accent' : 'bg-surface-2 border border-border'}`}
           >
-            <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${mentionAll ? 'translate-x-5' : 'translate-x-0.5'}`} />
+            <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${mentionAll ? 'translate-x-4' : 'translate-x-0.5'}`} />
           </div>
-          <span className="text-sm">Mencionar todos (@todos)</span>
+          <span className="text-sm text-secondary">Mencionar todos (@todos)</span>
         </label>
 
         {/* Data/hora */}
         <div>
-          <label className="block text-sm font-medium mb-1.5">Data e hora <span className="text-muted text-xs">(BRT — UTC-3)</span></label>
+          <label className="block text-xs text-muted uppercase tracking-wider mb-2">
+            Data e hora <span className="normal-case">(BRT — UTC-3)</span>
+          </label>
           <input
             type="datetime-local"
             value={agendadoPara}
-            onChange={(e) => setAgendadoPara(e.target.value)}
-            className="bg-card border border-border rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-accent transition-colors"
+            onChange={e => setAgendadoPara(e.target.value)}
+            className="input w-auto"
           />
         </div>
 
-        {/* Info intervalo */}
-        <div className="flex items-center gap-2 px-4 py-3 bg-card border border-border rounded-lg">
-          <span className="text-sm">🎲</span>
-          <span className="text-sm text-muted">Intervalo aleatório de 40–60s entre cada grupo</span>
+        {/* Intervalo info */}
+        <div className="flex items-center gap-3 px-4 py-3 bg-surface-2 border border-border rounded-xl">
+          <svg width="14" height="14" fill="none" stroke="#71717a" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-xs text-muted">Intervalo aleatório de 40–60s entre cada grupo</p>
         </div>
 
         {/* Botões */}
-        <div className="flex gap-3 pt-2">
+        <div className="flex gap-3 pt-1">
           <button
             onClick={() => handleSend(true)}
             disabled={sending}
-            className="flex-1 py-3 rounded-lg bg-green-500 hover:bg-green-400 disabled:opacity-50 text-black font-semibold text-sm transition-colors"
+            className="flex-1 py-2.5 rounded-lg bg-green-500 hover:bg-green-400 disabled:opacity-40 text-black font-semibold text-sm transition-colors"
           >
             {sending ? (uploading ? 'Enviando imagem...' : 'Agendando...') : 'Enviar Agora'}
           </button>
           <button
             onClick={() => handleSend(false)}
             disabled={sending}
-            className="flex-1 py-3 rounded-lg bg-accent hover:bg-accent-hover disabled:opacity-50 text-black font-semibold text-sm transition-colors"
+            className="btn-primary flex-1 py-2.5"
           >
             {sending ? 'Agendando...' : 'Agendar'}
           </button>
