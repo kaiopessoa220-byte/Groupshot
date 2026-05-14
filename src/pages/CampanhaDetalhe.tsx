@@ -1470,10 +1470,10 @@ export default function CampanhaDetalhe() {
               <div>
                 <label className="block text-xs text-muted uppercase tracking-wider mb-2">Instância</label>
                 <div className="flex flex-wrap gap-2">
-                  {campInstances.length === 0 && (
-                    <p className="text-sm text-muted">Nenhuma instância conectada na campanha.</p>
+                  {connectedInstances.length === 0 && (
+                    <p className="text-sm text-muted">Nenhuma instância conectada.</p>
                   )}
-                  {campInstances.map(inst => (
+                  {connectedInstances.map(inst => (
                     <button
                       key={inst.name}
                       onClick={() => setCriarInstancia(inst.name)}
