@@ -95,7 +95,7 @@ serve(async (req: Request) => {
   if (req.method === 'DELETE' && deleteInstanceMatch) {
     const instanceName = deleteInstanceMatch[1]
     try {
-      const res = await fetch(`${EVOLUTION_URL}/instance/delete/${instanceName}`, {
+      const res = await fetch(`${EVOLUTION_URL}/instance/delete/${encodeURIComponent(instanceName)}`, {
         method: 'DELETE',
         headers: evolutionHeaders(),
       })
@@ -111,7 +111,7 @@ serve(async (req: Request) => {
   if (req.method === 'GET' && qrcodeMatch) {
     const instanceName = qrcodeMatch[1]
     try {
-      const res = await fetch(`${EVOLUTION_URL}/instance/connect/${instanceName}`, {
+      const res = await fetch(`${EVOLUTION_URL}/instance/connect/${encodeURIComponent(instanceName)}`, {
         headers: evolutionHeaders(),
       })
       if (!res.ok) return err('Erro ao gerar QR: ' + res.status, 500)
@@ -130,7 +130,7 @@ serve(async (req: Request) => {
     if (!instance) return err('Parâmetro instance obrigatório')
     try {
       const res = await fetch(
-        `${EVOLUTION_URL}/group/fetchAllGroups/${instance}?getParticipants=${withParticipants}`,
+        `${EVOLUTION_URL}/group/fetchAllGroups/${encodeURIComponent(instance)}?getParticipants=${withParticipants}`,
         { headers: evolutionHeaders() }
       )
       const data = await res.json()
@@ -154,7 +154,7 @@ serve(async (req: Request) => {
     if (!instance || !groupId) return err('instance e groupId obrigatórios')
     try {
       const res = await fetch(
-        `${EVOLUTION_URL}/misc/profilePicture/${instance}?number=${encodeURIComponent(groupId)}`,
+        `${EVOLUTION_URL}/misc/profilePicture/${encodeURIComponent(instance)}?number=${encodeURIComponent(groupId)}`,
         { headers: evolutionHeaders() }
       )
       const data = await res.json()
@@ -190,7 +190,7 @@ serve(async (req: Request) => {
     for (const inst of instancias) {
       try {
         const res = await fetch(
-          `${EVOLUTION_URL}/group/fetchAllGroups/${inst}?getParticipants=false`,
+          `${EVOLUTION_URL}/group/fetchAllGroups/${encodeURIComponent(inst)}?getParticipants=false`,
           { headers: evolutionHeaders() }
         )
         const data = await res.json()
@@ -448,7 +448,7 @@ serve(async (req: Request) => {
     for (let i = 1; i <= quantidade; i++) {
       const subject = `${nomeBase} #${i}`
       try {
-        const res = await fetch(`${EVOLUTION_URL}/group/create/${instance}`, {
+        const res = await fetch(`${EVOLUTION_URL}/group/create/${encodeURIComponent(instance)}`, {
           method: 'POST',
           headers: evolutionHeaders(),
           body: JSON.stringify({ subject, participants }),
@@ -490,45 +490,45 @@ serve(async (req: Request) => {
       try {
         let res: Response
         if (action === 'trocar-nome') {
-          res = await fetch(`${EVOLUTION_URL}/group/subject/${instance}`, {
+          res = await fetch(`${EVOLUTION_URL}/group/subject/${encodeURIComponent(instance)}`, {
             method: 'PUT',
             headers: evolutionHeaders(),
             body: JSON.stringify({ id: groupId, subject: content?.value }),
           })
         } else if (action === 'trocar-descricao') {
-          res = await fetch(`${EVOLUTION_URL}/group/description/${instance}`, {
+          res = await fetch(`${EVOLUTION_URL}/group/description/${encodeURIComponent(instance)}`, {
             method: 'PUT',
             headers: evolutionHeaders(),
             body: JSON.stringify({ id: groupId, description: content?.value }),
           })
         } else if (action === 'trocar-imagem') {
-          res = await fetch(`${EVOLUTION_URL}/group/picture/${instance}`, {
+          res = await fetch(`${EVOLUTION_URL}/group/picture/${encodeURIComponent(instance)}`, {
             method: 'PUT',
             headers: evolutionHeaders(),
             body: JSON.stringify({ id: groupId, image: content?.image }),
           })
         } else if (action === 'fechar-grupos') {
-          res = await fetch(`${EVOLUTION_URL}/group/update-setting/${instance}`, {
+          res = await fetch(`${EVOLUTION_URL}/group/update-setting/${encodeURIComponent(instance)}`, {
             method: 'PUT',
             headers: evolutionHeaders(),
             body: JSON.stringify({ groupJid: groupId, action: 'announcement' }),
           })
         } else if (action === 'abrir-grupos') {
-          res = await fetch(`${EVOLUTION_URL}/group/update-setting/${instance}`, {
+          res = await fetch(`${EVOLUTION_URL}/group/update-setting/${encodeURIComponent(instance)}`, {
             method: 'PUT',
             headers: evolutionHeaders(),
             body: JSON.stringify({ groupJid: groupId, action: 'not_announcement' }),
           })
         } else if (action === 'trocar-configuracao') {
           const settingAction = content?.onlyAdmins ? 'announcement' : 'not_announcement'
-          res = await fetch(`${EVOLUTION_URL}/group/update-setting/${instance}`, {
+          res = await fetch(`${EVOLUTION_URL}/group/update-setting/${encodeURIComponent(instance)}`, {
             method: 'PUT',
             headers: evolutionHeaders(),
             body: JSON.stringify({ groupJid: groupId, action: settingAction }),
           })
         } else if (action === 'add-admins') {
           const phones = (content?.phones as string[]) ?? []
-          res = await fetch(`${EVOLUTION_URL}/group/update-participant/${instance}`, {
+          res = await fetch(`${EVOLUTION_URL}/group/update-participant/${encodeURIComponent(instance)}`, {
             method: 'PATCH',
             headers: evolutionHeaders(),
             body: JSON.stringify({ groupJid: groupId, action: 'promote', participants: phones }),
@@ -572,7 +572,7 @@ serve(async (req: Request) => {
     await Promise.all(Array.from(byInstance.entries()).map(async ([inst, ids]) => {
       try {
         const res = await fetch(
-          `${EVOLUTION_URL}/group/fetchAllGroups/${inst}?getParticipants=true`,
+          `${EVOLUTION_URL}/group/fetchAllGroups/${encodeURIComponent(inst)}?getParticipants=true`,
           { headers: evolutionHeaders() }
         )
         const data = await res.json()
