@@ -76,6 +76,22 @@ serve(async (req: Request) => {
     }
   }
 
+  // DELETE /instance/:name
+  const deleteInstanceMatch = path.match(/^\/instance\/([^/]+)$/)
+  if (req.method === 'DELETE' && deleteInstanceMatch) {
+    const instanceName = deleteInstanceMatch[1]
+    try {
+      const res = await fetch(`${EVOLUTION_URL}/instance/delete/${instanceName}`, {
+        method: 'DELETE',
+        headers: evolutionHeaders(),
+      })
+      if (!res.ok) return err('Erro ao excluir instância: ' + res.status, 500)
+      return json({ ok: true })
+    } catch (e) {
+      return err('Erro ao excluir instância: ' + (e as Error).message, 500)
+    }
+  }
+
   // GET /instance/qrcode/:name
   const qrcodeMatch = path.match(/^\/instance\/qrcode\/(.+)$/)
   if (req.method === 'GET' && qrcodeMatch) {

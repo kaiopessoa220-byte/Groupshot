@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { fetchInstances, fetchQRCode, createInstance, fetchProfilePicture } from '../lib/api'
+import { fetchInstances, fetchQRCode, createInstance, deleteInstance, fetchProfilePicture } from '../lib/api'
 import type { Instance } from '../lib/api'
 
 type Tab = 'all' | 'connected' | 'disconnected'
@@ -80,6 +80,17 @@ export default function Contas() {
     setQrBase64(null)
     setQrConnected(false)
     if (pollRef.current) clearInterval(pollRef.current)
+  }
+
+  const handleDeleteInstancia = async (e: React.MouseEvent, name: string) => {
+    e.stopPropagation()
+    if (!confirm(`Excluir a instância "${name}"? Esta ação não pode ser desfeita.`)) return
+    try {
+      await deleteInstance(name)
+      load()
+    } catch (ex: unknown) {
+      setError(ex instanceof Error ? ex.message : 'Erro ao excluir instância')
+    }
   }
 
   const handleCriarInstancia = async () => {
@@ -254,15 +265,13 @@ export default function Contas() {
                       </svg>
                     </button>
                   )}
-                  <button title="Configurações" className="p-2 text-muted hover:text-zinc-300 transition-colors rounded-lg hover:bg-surface-2">
+                  <button
+                    onClick={e => handleDeleteInstancia(e, inst.name)}
+                    title="Excluir instância"
+                    className="p-2 text-muted hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/10"
+                  >
                     <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
-                      <circle cx="12" cy="12" r="3" />
-                      <path strokeLinecap="round" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
-                    </svg>
-                  </button>
-                  <button title="Detalhes" className="p-2 text-muted hover:text-zinc-300 transition-colors rounded-lg hover:bg-surface-2">
-                    <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                   </button>
                 </div>
