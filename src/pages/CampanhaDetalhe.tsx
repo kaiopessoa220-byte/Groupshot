@@ -954,78 +954,131 @@ export default function CampanhaDetalhe() {
             <div className="space-y-4">
               <p className="text-xs text-muted uppercase tracking-wider mb-3">Conteúdo da ação</p>
 
-              {wizardAction === 'enviar-mensagem' && (
-                <>
-                  <div>
-                    <label className="block text-xs text-muted uppercase tracking-wider mb-2">Mensagem</label>
-                    <textarea
-                      placeholder="Digite a mensagem..."
-                      value={(wizardContent as { mensagem?: string }).mensagem ?? ''}
-                      onChange={e => setWizardContent(prev => ({ ...prev, mensagem: e.target.value }))}
-                      rows={5}
-                      className="input resize-none"
-                    />
-                    <p className="text-xs text-muted mt-1">{((wizardContent as { mensagem?: string }).mensagem ?? '').length} caracteres</p>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-muted uppercase tracking-wider mb-2">Imagem <span className="normal-case">(opcional)</span></label>
-                    <div
-                      onClick={() => wizardFileRef.current?.click()}
-                      onDrop={e => {
-                        e.preventDefault()
-                        const f = e.dataTransfer.files[0]
-                        if (f && f.type.startsWith('image/')) {
-                          setWizardContent(prev => ({ ...prev, imageFile: f }))
-                          setImagePreview(URL.createObjectURL(f))
-                        }
-                      }}
-                      onDragOver={e => e.preventDefault()}
-                      className="border border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-border-2 transition-colors"
-                    >
-                      {imagePreview ? (
-                        <div className="relative inline-block">
-                          <img src={imagePreview} alt="preview" className="max-h-28 rounded-lg mx-auto" />
-                          <button
-                            onClick={e => { e.stopPropagation(); setWizardContent(prev => ({ ...prev, imageFile: undefined })); setImagePreview(null) }}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
-                          >×</button>
+              {wizardAction === 'enviar-mensagem' && (() => {
+                const msg = (wizardContent as { mensagem?: string }).mensagem ?? ''
+                const mentionAll = (wizardContent as { mentionAll?: boolean }).mentionAll ?? false
+                const agendadoPara = (wizardContent as { agendadoPara?: string }).agendadoPara ?? ''
+                const now = new Date()
+                const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                return (
+                  <div className="flex gap-6">
+                    {/* Editor */}
+                    <div className="flex-1 space-y-4 min-w-0">
+                      <div>
+                        <label className="block text-xs text-muted uppercase tracking-wider mb-2">Mensagem</label>
+                        <textarea
+                          placeholder="Digite a mensagem..."
+                          value={msg}
+                          onChange={e => setWizardContent(prev => ({ ...prev, mensagem: e.target.value }))}
+                          rows={5}
+                          className="input resize-none"
+                        />
+                        <p className="text-xs text-muted mt-1">{msg.length} caracteres</p>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-muted uppercase tracking-wider mb-2">Imagem <span className="normal-case">(opcional)</span></label>
+                        <div
+                          onClick={() => wizardFileRef.current?.click()}
+                          onDrop={e => {
+                            e.preventDefault()
+                            const f = e.dataTransfer.files[0]
+                            if (f && f.type.startsWith('image/')) {
+                              setWizardContent(prev => ({ ...prev, imageFile: f }))
+                              setImagePreview(URL.createObjectURL(f))
+                            }
+                          }}
+                          onDragOver={e => e.preventDefault()}
+                          className="border border-dashed border-border rounded-xl p-4 text-center cursor-pointer hover:border-border-2 transition-colors"
+                        >
+                          {imagePreview ? (
+                            <div className="relative inline-block">
+                              <img src={imagePreview} alt="preview" className="max-h-24 rounded-lg mx-auto" />
+                              <button
+                                onClick={e => { e.stopPropagation(); setWizardContent(prev => ({ ...prev, imageFile: undefined })); setImagePreview(null) }}
+                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                              >×</button>
+                            </div>
+                          ) : (
+                            <div>
+                              <svg width="18" height="18" fill="none" stroke="#71717a" strokeWidth="1.5" viewBox="0 0 24 24" className="mx-auto mb-1.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              <p className="text-xs text-muted">Arraste ou clique para selecionar</p>
+                            </div>
+                          )}
                         </div>
-                      ) : (
-                        <div>
-                          <svg width="20" height="20" fill="none" stroke="#71717a" strokeWidth="1.5" viewBox="0 0 24 24" className="mx-auto mb-2">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <p className="text-sm text-muted">Arraste ou clique para selecionar</p>
-                          <p className="text-xs text-muted mt-0.5">PNG, JPG, GIF, WEBP</p>
+                        <input ref={wizardFileRef} type="file" accept="image/*" className="hidden"
+                          onChange={e => {
+                            const f = e.target.files?.[0]
+                            if (f) { setWizardContent(prev => ({ ...prev, imageFile: f })); setImagePreview(URL.createObjectURL(f)) }
+                          }} />
+                      </div>
+                      <label className="flex items-center gap-3 cursor-pointer select-none">
+                        <div
+                          onClick={() => setWizardContent(prev => ({ ...prev, mentionAll: !mentionAll }))}
+                          className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${mentionAll ? 'bg-accent' : 'bg-surface-2 border border-border'}`}
+                        >
+                          <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${mentionAll ? 'translate-x-4' : 'translate-x-0.5'}`} />
                         </div>
-                      )}
+                        <span className="text-sm text-secondary">Mencionar todos (@todos)</span>
+                      </label>
+                      <div>
+                        <label className="block text-xs text-muted uppercase tracking-wider mb-2">Agendar para <span className="normal-case">(BRT — UTC-3)</span></label>
+                        <input
+                          type="datetime-local"
+                          value={agendadoPara}
+                          onChange={e => setWizardContent(prev => ({ ...prev, agendadoPara: e.target.value }))}
+                          className="input w-auto"
+                        />
+                      </div>
                     </div>
-                    <input ref={wizardFileRef} type="file" accept="image/*" className="hidden"
-                      onChange={e => {
-                        const f = e.target.files?.[0]
-                        if (f) { setWizardContent(prev => ({ ...prev, imageFile: f })); setImagePreview(URL.createObjectURL(f)) }
-                      }} />
-                  </div>
-                  <label className="flex items-center gap-3 cursor-pointer select-none">
-                    <div
-                      onClick={() => setWizardContent(prev => ({ ...prev, mentionAll: !(prev as { mentionAll?: boolean }).mentionAll }))}
-                      className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${(wizardContent as { mentionAll?: boolean }).mentionAll ? 'bg-accent' : 'bg-surface-2 border border-border'}`}
-                    >
-                      <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${(wizardContent as { mentionAll?: boolean }).mentionAll ? 'translate-x-4' : 'translate-x-0.5'}`} />
+
+                    {/* WhatsApp Preview */}
+                    <div className="w-64 flex-shrink-0">
+                      <p className="text-xs text-muted uppercase tracking-wider mb-2">Preview</p>
+                      <div className="rounded-2xl overflow-hidden border border-border" style={{ background: '#111b21' }}>
+                        {/* Chat header */}
+                        <div className="flex items-center gap-2.5 px-3 py-2.5" style={{ background: '#202c33' }}>
+                          <div className="w-8 h-8 rounded-full bg-accent/20 border border-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold text-xs">
+                            {campanha.nome.slice(0, 2).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-white truncate">{campanha.nome}</p>
+                            <p className="text-[10px]" style={{ color: '#8696a0' }}>{campanha.campanha_grupos.length} participantes</p>
+                          </div>
+                        </div>
+                        {/* Chat body */}
+                        <div className="px-3 py-4 min-h-36 flex flex-col justify-end gap-1" style={{ background: '#0b141a' }}>
+                          {(msg || imagePreview) ? (
+                            <div className="self-end max-w-[90%] rounded-xl rounded-tr-sm px-2.5 pt-2 pb-1.5 text-xs relative" style={{ background: '#005c4b' }}>
+                              {imagePreview && (
+                                <img src={imagePreview} alt="" className="rounded-lg mb-1.5 w-full object-cover max-h-32" />
+                              )}
+                              {msg && (
+                                <p className="text-white text-[11px] leading-[1.4] whitespace-pre-wrap break-words">{msg}</p>
+                              )}
+                              {mentionAll && (
+                                <p className="text-[10px] mt-0.5" style={{ color: '#53bdeb' }}>@todos</p>
+                              )}
+                              <div className="flex items-center justify-end gap-1 mt-1">
+                                <span className="text-[9px]" style={{ color: '#8696a0' }}>{timeStr}</span>
+                                <svg width="14" height="8" viewBox="0 0 16 11" fill="none">
+                                  <path d="M11 1L5.5 6.5L3 4" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                  <path d="M15 1L9.5 6.5L7 4" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-center py-4">
+                              <p className="text-[10px]" style={{ color: '#8696a0' }}>Digite uma mensagem para ver o preview</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <span className="text-sm text-secondary">Mencionar todos (@todos)</span>
-                  </label>
-                  <div>
-                    <label className="block text-xs text-muted uppercase tracking-wider mb-2">Agendar para <span className="normal-case">(BRT — UTC-3)</span></label>
-                    <input
-                      type="datetime-local"
-                      value={(wizardContent as { agendadoPara?: string }).agendadoPara ?? ''}
-                      onChange={e => setWizardContent(prev => ({ ...prev, agendadoPara: e.target.value }))}
-                      className="input w-auto"
-                    />
                   </div>
-                </>
-              )}
+                )
+              })()}
 
               {(wizardAction === 'trocar-nome') && (
                 <div>
