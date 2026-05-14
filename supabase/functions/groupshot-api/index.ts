@@ -340,7 +340,7 @@ serve(async (req: Request) => {
   const dispararMatch = path.match(/^\/campanhas\/([^/]+)\/disparar$/)
   if (req.method === 'POST' && dispararMatch) {
     const cId = dispararMatch[1]
-    let body: { nome?: string; mensagem: string; imageUrl?: string; imageMimetype?: string; mentionAll: boolean; agendadoPara: string }
+    let body: { nome?: string; mensagem: string; imageUrl?: string; imageMimetype?: string; mentionAll: boolean; agendadoPara: string; groupIds?: string[] }
     try { body = await req.json() } catch { return err('JSON inválido') }
     if (!body.mensagem) return err('mensagem obrigatória')
 
@@ -357,6 +357,11 @@ serve(async (req: Request) => {
     const { mensagem, imageUrl, imageMimetype, mentionAll, agendadoPara } = body
     const baseTime = new Date(agendadoPara).getTime()
 
+    // Filter groups if specific groupIds provided
+    const targetGroups = body.groupIds?.length
+      ? campanha.campanha_grupos.filter((g: { group_id: string }) => body.groupIds!.includes(g.group_id))
+      : campanha.campanha_grupos
+
     const { data: disparo, error: dErr } = await db
       .from('disparos')
       .insert({
@@ -367,7 +372,7 @@ serve(async (req: Request) => {
         mention_all: mentionAll,
         agendado_para: new Date(baseTime).toISOString(),
         status: 'agendado',
-        total_grupos: campanha.campanha_grupos.length,
+        total_grupos: targetGroups.length,
         campanha_id: cId,
       })
       .select()
@@ -375,7 +380,7 @@ serve(async (req: Request) => {
     if (dErr || !disparo) return err('Erro ao salvar: ' + dErr?.message, 500)
 
     let acumulado = 0
-    const itens = campanha.campanha_grupos.map((g: { group_id: string; group_name: string; instancia: string }, i: number) => {
+    const itens = targetGroups.map((g: { group_id: string; group_name: string; instancia: string }, i: number) => {
       if (i > 0) acumulado += 40000 + Math.floor(Math.random() * 20001)
       const instancia = campanha.instancias[Math.floor(Math.random() * campanha.instancias.length)]
       return { disparo_id: disparo.id, group_id: g.group_id, group_name: g.group_name, instancia, send_at: new Date(baseTime + acumulado).toISOString(), status: 'pendente' }
@@ -394,6 +399,106 @@ serve(async (req: Request) => {
       }
     }
     return json({ id: disparo.id, itens: itens.length }, 201)
+  }
+
+  // POST /group/create-batch
+  if (req.method === 'POST' && path === '/group/create-batch') {
+    let body: { instance: string; nomeBase: string; quantidade: number; limite: number }
+    try { body = await req.json() } catch { return err('JSON inválido') }
+    const { instance, nomeBase, quantidade, limite } = body
+    if (!instance || !nomeBase || !quantidade) return err('instance, nomeBase e quantidade são obrigatórios')
+
+    const results: { id: string; subject: string }[] = []
+    for (let i = 1; i <= quantidade; i++) {
+      const subject = `${nomeBase} #${i}`
+      try {
+        const res = await fetch(`${EVOLUTION_URL}/group/create/${instance}`, {
+          method: 'POST',
+          headers: evolutionHeaders(),
+          body: JSON.stringify({ subject, participants: [], size: limite }),
+        })
+        const data = await res.json()
+        const id = data.id ?? data.groupJid ?? data.data?.id ?? ''
+        results.push({ id, subject })
+      } catch {
+        results.push({ id: '', subject })
+      }
+    }
+    return json(results, 201)
+  }
+
+  // POST /group/action-batch
+  if (req.method === 'POST' && path === '/group/action-batch') {
+    let body: { action: string; instances: string[]; groupIds: string[]; content?: Record<string, unknown> }
+    try { body = await req.json() } catch { return err('JSON inválido') }
+    const { action, instances, groupIds, content } = body
+    if (!action || !instances?.length || !groupIds?.length) return err('action, instances e groupIds são obrigatórios')
+
+    const results: { groupId: string; ok: boolean; error?: string }[] = []
+
+    for (const groupId of groupIds) {
+      const instance = instances[Math.floor(Math.random() * instances.length)]
+      try {
+        let res: Response
+        if (action === 'trocar-nome') {
+          res = await fetch(`${EVOLUTION_URL}/group/subject/${instance}`, {
+            method: 'PUT',
+            headers: evolutionHeaders(),
+            body: JSON.stringify({ id: groupId, subject: content?.value }),
+          })
+        } else if (action === 'trocar-descricao') {
+          res = await fetch(`${EVOLUTION_URL}/group/description/${instance}`, {
+            method: 'PUT',
+            headers: evolutionHeaders(),
+            body: JSON.stringify({ id: groupId, description: content?.value }),
+          })
+        } else if (action === 'trocar-imagem') {
+          res = await fetch(`${EVOLUTION_URL}/group/picture/${instance}`, {
+            method: 'PUT',
+            headers: evolutionHeaders(),
+            body: JSON.stringify({ id: groupId, image: content?.image }),
+          })
+        } else if (action === 'fechar-grupos') {
+          res = await fetch(`${EVOLUTION_URL}/group/update-setting/${instance}`, {
+            method: 'PUT',
+            headers: evolutionHeaders(),
+            body: JSON.stringify({ groupJid: groupId, action: 'announcement' }),
+          })
+        } else if (action === 'abrir-grupos') {
+          res = await fetch(`${EVOLUTION_URL}/group/update-setting/${instance}`, {
+            method: 'PUT',
+            headers: evolutionHeaders(),
+            body: JSON.stringify({ groupJid: groupId, action: 'not_announcement' }),
+          })
+        } else if (action === 'trocar-configuracao') {
+          const settingAction = content?.onlyAdmins ? 'announcement' : 'not_announcement'
+          res = await fetch(`${EVOLUTION_URL}/group/update-setting/${instance}`, {
+            method: 'PUT',
+            headers: evolutionHeaders(),
+            body: JSON.stringify({ groupJid: groupId, action: settingAction }),
+          })
+        } else if (action === 'add-admins') {
+          const phones = (content?.phones as string[]) ?? []
+          res = await fetch(`${EVOLUTION_URL}/group/update-participant/${instance}`, {
+            method: 'PATCH',
+            headers: evolutionHeaders(),
+            body: JSON.stringify({ groupJid: groupId, action: 'promote', participants: phones }),
+          })
+        } else if (action === 'entrar-grupo') {
+          // No-op for now
+          results.push({ groupId, ok: true })
+          continue
+        } else {
+          results.push({ groupId, ok: false, error: 'Ação desconhecida: ' + action })
+          continue
+        }
+        results.push({ groupId, ok: res.ok, error: res.ok ? undefined : `HTTP ${res.status}` })
+      } catch (e) {
+        results.push({ groupId, ok: false, error: (e as Error).message })
+      }
+    }
+
+    return json({ results })
   }
 
   // POST /campanhas/:id/grupos

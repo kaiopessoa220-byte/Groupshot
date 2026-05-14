@@ -188,6 +188,7 @@ export interface DispararCampanhaPayload {
   imageMimetype?: string
   mentionAll: boolean
   agendadoPara: string
+  groupIds?: string[]
 }
 
 export async function dispararCampanha(
@@ -229,6 +230,36 @@ export interface VisaoGeral {
 export async function fetchVisaoGeral(): Promise<VisaoGeral> {
   const res = await fetch(`${API_BASE}/visao-geral`, { headers: headers() })
   if (!res.ok) throw new Error('Erro ao buscar visão geral')
+  return res.json()
+}
+
+export async function createGroups(payload: {
+  instance: string
+  nomeBase: string
+  quantidade: number
+  limite: number
+}): Promise<{ id: string; subject: string }[]> {
+  const res = await fetch(`${API_BASE}/group/create-batch`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
+}
+
+export async function executeGroupAction(payload: {
+  action: string
+  instances: string[]
+  groupIds: string[]
+  content?: Record<string, unknown>
+}): Promise<{ results: { groupId: string; ok: boolean; error?: string }[] }> {
+  const res = await fetch(`${API_BASE}/group/action-batch`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) throw new Error(await res.text())
   return res.json()
 }
 
