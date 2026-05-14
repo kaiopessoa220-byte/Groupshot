@@ -163,6 +163,7 @@ export default function CampanhaDetalhe() {
   const [criarQuantidade, setCriarQuantidade] = useState(1)
   const [criarLimite, setCriarLimite] = useState(550)
   const [criarInstancia, setCriarInstancia] = useState('')
+  const [criarParticipante, setCriarParticipante] = useState('')
   const [criandoGrupos, setCriandoGrupos] = useState(false)
   const [criarError, setCriarError] = useState('')
 
@@ -298,13 +299,12 @@ export default function CampanhaDetalhe() {
     setCriandoGrupos(true)
     setCriarError('')
     try {
-      const selectedInst = connectedInstances.find(i => i.name === criarInstancia)
       const created = await createGroups({
         instance: criarInstancia,
         nomeBase: criarNomeBase.trim(),
         quantidade: criarQuantidade,
         limite: criarLimite,
-        ownerJid: selectedInst?.ownerJid,
+        ownerJid: criarParticipante.trim() || undefined,
       })
       const toAdd = created
         .filter(g => g.id)
@@ -319,6 +319,7 @@ export default function CampanhaDetalhe() {
       setCriarQuantidade(1)
       setCriarLimite(550)
       setCriarInstancia('')
+      setCriarParticipante('')
       setCriarError('')
       load()
     } catch (e: unknown) {
@@ -1474,6 +1475,18 @@ export default function CampanhaDetalhe() {
               </div>
 
               <div>
+                <label className="block text-xs text-muted uppercase tracking-wider mb-2">Número participante inicial</label>
+                <input
+                  type="text"
+                  placeholder="5511999999999"
+                  value={criarParticipante}
+                  onChange={e => setCriarParticipante(e.target.value)}
+                  className="input"
+                />
+                <p className="text-xs text-muted mt-1">WhatsApp exige ao menos 1 participante (diferente do criador) para criar um grupo.</p>
+              </div>
+
+              <div>
                 <label className="block text-xs text-muted uppercase tracking-wider mb-2">Instância</label>
                 <div className="flex flex-wrap gap-2">
                   {connectedInstances.length === 0 && (
@@ -1511,7 +1524,7 @@ export default function CampanhaDetalhe() {
               </button>
               <button
                 onClick={handleCriarGrupos}
-                disabled={criandoGrupos || !criarNomeBase.trim() || !criarInstancia}
+                disabled={criandoGrupos || !criarNomeBase.trim() || !criarInstancia || !criarParticipante.trim()}
                 className="btn-primary flex-1 py-2.5"
               >
                 {criandoGrupos ? 'Criando...' : `Criar ${criarQuantidade} grupo(s)`}
