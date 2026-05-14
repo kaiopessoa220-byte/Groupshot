@@ -1035,7 +1035,7 @@ export default function CampanhaDetalhe() {
 
                     {/* WhatsApp Preview */}
                     <div className="w-64 flex-shrink-0">
-                      <p className="text-xs text-muted uppercase tracking-wider mb-2">Preview</p>
+                      <p className="text-xs text-muted uppercase tracking-wider mb-2">Pré-visualização</p>
                       <div className="rounded-2xl overflow-hidden border border-border" style={{ background: '#111b21' }}>
                         {/* Chat header */}
                         <div className="flex items-center gap-2.5 px-3 py-2.5" style={{ background: '#202c33' }}>
