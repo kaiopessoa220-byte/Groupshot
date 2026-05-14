@@ -69,6 +69,14 @@ export async function createInstance(instanceName: string): Promise<void> {
   if (!res.ok) throw new Error(await res.text())
 }
 
+export async function fetchProfilePicture(instance: string, jid: string): Promise<string | null> {
+  const params = new URLSearchParams({ instance, groupId: jid })
+  const res = await fetch(`${API_BASE}/group/picture?${params}`, { headers: headers() })
+  if (!res.ok) return null
+  const data = await res.json()
+  return data.url ?? null
+}
+
 export async function fetchGroups(instance: string, withParticipants = false): Promise<Group[]> {
   const params = new URLSearchParams({ instance })
   if (withParticipants) params.set('participants', 'true')

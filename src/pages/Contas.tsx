@@ -1,20 +1,23 @@
 import { useEffect, useRef, useState } from 'react'
-import { fetchInstances, fetchQRCode, createInstance } from '../lib/api'
+import { fetchInstances, fetchQRCode, createInstance, fetchProfilePicture } from '../lib/api'
 import type { Instance } from '../lib/api'
+
+type Tab = 'all' | 'connected' | 'disconnected'
 
 export default function Contas() {
   const [instances, setInstances] = useState<Instance[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [tab, setTab] = useState<Tab>('all')
+  const [search, setSearch] = useState('')
+  const [pics, setPics] = useState<Record<string, string>>({})
 
-  // QR Code modal
   const [qrInstance, setQrInstance] = useState<string | null>(null)
   const [qrBase64, setQrBase64] = useState<string | null>(null)
   const [qrLoading, setQrLoading] = useState(false)
   const [qrConnected, setQrConnected] = useState(false)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Nova instância
   const [showNova, setShowNova] = useState(false)
   const [novoNome, setNovoNome] = useState('')
   const [criando, setCriando] = useState(false)
@@ -23,14 +26,21 @@ export default function Contas() {
   const load = () => {
     setLoading(true)
     fetchInstances()
-      .then(setInstances)
+      .then(list => {
+        setInstances(list)
+        list.forEach(inst => {
+          if (!inst.ownerJid) return
+          fetchProfilePicture(inst.name, inst.ownerJid)
+            .then(url => { if (url) setPics(prev => ({ ...prev, [inst.name]: url })) })
+            .catch(() => {})
+        })
+      })
       .catch(() => setError('Erro ao carregar instâncias'))
       .finally(() => setLoading(false))
   }
 
   useEffect(() => { load() }, [])
 
-  // Polling: verifica se a instância ficou conectada
   useEffect(() => {
     if (!qrInstance) {
       if (pollRef.current) clearInterval(pollRef.current)
@@ -81,7 +91,6 @@ export default function Contas() {
       await createInstance(nome)
       setNovoNome('')
       setShowNova(false)
-      // Abre QR automaticamente após criar
       await openQR(nome)
       load()
     } catch (e: unknown) {
@@ -89,6 +98,20 @@ export default function Contas() {
     } finally {
       setCriando(false)
     }
+  }
+
+  const filtered = instances
+    .filter(i => {
+      if (tab === 'connected') return i.connectionStatus === 'open'
+      if (tab === 'disconnected') return i.connectionStatus !== 'open'
+      return true
+    })
+    .filter(i => i.name.toLowerCase().includes(search.toLowerCase()))
+
+  const counts = {
+    all: instances.length,
+    connected: instances.filter(i => i.connectionStatus === 'open').length,
+    disconnected: instances.filter(i => i.connectionStatus !== 'open').length,
   }
 
   if (loading) return (
@@ -104,17 +127,10 @@ export default function Contas() {
     </div>
   )
 
-  const connected = instances.filter(i => i.connectionStatus === 'open')
-  const disconnected = instances.filter(i => i.connectionStatus !== 'open')
-
   return (
-    <div className="p-8 max-w-2xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <p className="text-xs text-muted uppercase tracking-widest mb-1.5">WhatsApp</p>
-          <h1 className="text-2xl font-semibold text-white tracking-tight">Contas</h1>
-        </div>
+    <div className="p-8">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-semibold text-white tracking-tight">Contas</h1>
         <div className="flex items-center gap-2">
           <button onClick={load} className="btn-secondary flex items-center gap-2">
             <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -122,87 +138,113 @@ export default function Contas() {
             </svg>
             Atualizar
           </button>
-          <button onClick={() => { setShowNova(true); setCriarErro('') }} className="btn-primary flex items-center gap-2">
+          <button
+            onClick={() => { setShowNova(true); setCriarErro('') }}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-accent text-accent text-sm font-semibold hover:bg-accent hover:text-black transition-colors"
+          >
             <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
             </svg>
-            Nova instância
+            Conta
           </button>
         </div>
       </div>
 
-      {/* Summary chips */}
-      {instances.length > 0 && (
-        <div className="flex gap-3 mb-6">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 border border-green-500/20 rounded-lg">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-            <span className="text-xs text-green-400 font-medium">{connected.length} conectada(s)</span>
-          </div>
-          {disconnected.length > 0 && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-500/10 border border-zinc-500/20 rounded-lg">
-              <span className="w-1.5 h-1.5 rounded-full bg-zinc-500" />
-              <span className="text-xs text-zinc-400 font-medium">{disconnected.length} desconectada(s)</span>
-            </div>
-          )}
-        </div>
-      )}
+      {/* Tabs */}
+      <div className="flex items-center border-b border-border mb-6">
+        {([
+          { key: 'all', label: 'Todas' },
+          { key: 'connected', label: 'Conectadas' },
+          { key: 'disconnected', label: 'Desconectadas' },
+        ] as { key: Tab; label: string }[]).map(t => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              tab === t.key ? 'border-accent text-accent' : 'border-transparent text-muted hover:text-white'
+            }`}
+          >
+            {t.label}
+            <span className={`ml-1.5 text-xs ${tab === t.key ? 'text-accent/70' : 'text-muted/50'}`}>
+              {counts[t.key]}
+            </span>
+          </button>
+        ))}
+      </div>
 
-      {instances.length === 0 ? (
+      {/* Search */}
+      <div className="relative mb-6">
+        <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" width="14" height="14" fill="none" stroke="#71717a" strokeWidth="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8" /><path strokeLinecap="round" d="M21 21l-4.35-4.35" />
+        </svg>
+        <input
+          type="text"
+          placeholder="Buscar"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="input pl-9"
+        />
+      </div>
+
+      {/* Grid */}
+      {filtered.length === 0 ? (
         <div className="bg-card border border-border rounded-xl px-6 py-16 text-center">
-          <div className="w-10 h-10 rounded-xl bg-surface-2 border border-border flex items-center justify-center mx-auto mb-4">
-            <svg width="18" height="18" fill="none" stroke="#71717a" strokeWidth="1.75" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 18a6 6 0 100-12 6 6 0 000 12zm0 0v3m-4-1.5l2-2.5m4 2.5l-2-2.5M3 12H1m4.22-6.36L3.76 4.2M12 3V1m6.36 4.22l1.44-1.44M21 12h2m-4.22 6.36l1.44 1.44" />
-            </svg>
-          </div>
           <p className="text-sm font-medium text-white mb-1">Nenhuma instância</p>
           <p className="text-xs text-muted">Configure instâncias na Evolution API.</p>
         </div>
       ) : (
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
-          <div className="grid grid-cols-[1fr_110px_40px] items-center px-5 py-2.5 border-b border-border">
-            <span className="text-xs text-muted">Instância</span>
-            <span className="text-xs text-muted">Status</span>
-            <span />
-          </div>
-          <div className="divide-y divide-border">
-            {instances.map(inst => {
-              const isOpen = inst.connectionStatus === 'open'
-              return (
-                <div key={inst.name} className="grid grid-cols-[1fr_110px_40px] items-center px-5 py-3.5">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="relative flex-shrink-0 w-2 h-2">
-                      {isOpen ? (
-                        <>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {filtered.map(inst => {
+            const isOpen = inst.connectionStatus === 'open'
+            const pic = pics[inst.name]
+            const phone = inst.ownerJid
+              ? '+' + inst.ownerJid.replace('@s.whatsapp.net', '').replace('@c.us', '')
+              : null
+
+            return (
+              <div
+                key={inst.name}
+                className="bg-card border border-border rounded-xl flex items-center gap-3.5 px-4 py-3.5 hover:border-border-2 transition-colors"
+              >
+                {pic ? (
+                  <img
+                    src={pic}
+                    alt={inst.name}
+                    className="w-12 h-12 rounded-xl object-cover flex-shrink-0"
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-xl bg-surface-2 border border-border flex items-center justify-center flex-shrink-0 text-sm font-bold text-white">
+                    {inst.name.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white truncate mb-1">{inst.name}</p>
+                  <div className="flex items-center gap-1.5">
+                    {isOpen ? (
+                      <>
+                        <span className="relative w-2 h-2 flex-shrink-0">
                           <span className="absolute inset-0 rounded-full bg-green-400 opacity-60 animate-ping" />
                           <span className="relative block w-2 h-2 rounded-full bg-green-400" />
-                        </>
-                      ) : (
-                        <span className="block w-2 h-2 rounded-full bg-zinc-600" />
-                      )}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{inst.name}</p>
-                      {inst.ownerJid && (
-                        <p className="text-xs text-muted mt-0.5 truncate">
-                          {inst.ownerJid.replace('@s.whatsapp.net', '').replace('@c.us', '')}
-                        </p>
-                      )}
-                    </div>
+                        </span>
+                        <span className="text-xs text-muted truncate">{phone ?? 'Conectada'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="w-2 h-2 rounded-full bg-zinc-600 flex-shrink-0" />
+                        <span className="text-xs text-muted truncate">{phone ?? 'Desconectada'}</span>
+                      </>
+                    )}
                   </div>
+                </div>
 
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-medium w-fit ${
-                    isOpen
-                      ? 'bg-green-500/10 text-green-400 border-green-500/20'
-                      : 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
-                  }`}>
-                    {isOpen ? 'Conectada' : 'Offline'}
-                  </span>
-
+                <div className="flex items-center gap-1 flex-shrink-0">
                   {!isOpen && (
                     <button
                       onClick={() => openQR(inst.name)}
                       title="Conectar via QR Code"
-                      className="p-1.5 text-muted hover:text-accent transition-colors"
+                      className="p-2 text-muted hover:text-accent transition-colors rounded-lg hover:bg-accent/10"
                     >
                       <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
                         <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -212,10 +254,21 @@ export default function Contas() {
                       </svg>
                     </button>
                   )}
+                  <button title="Configurações" className="p-2 text-muted hover:text-zinc-300 transition-colors rounded-lg hover:bg-surface-2">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="3" />
+                      <path strokeLinecap="round" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+                    </svg>
+                  </button>
+                  <button title="Detalhes" className="p-2 text-muted hover:text-zinc-300 transition-colors rounded-lg hover:bg-surface-2">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" />
+                    </svg>
+                  </button>
                 </div>
-              )
-            })}
-          </div>
+              </div>
+            )
+          })}
         </div>
       )}
 
@@ -236,21 +289,10 @@ export default function Contas() {
               autoFocus
               className="input mb-3"
             />
-            {criarErro && (
-              <p className="text-xs text-red-400 mb-3">{criarErro}</p>
-            )}
+            {criarErro && <p className="text-xs text-red-400 mb-3">{criarErro}</p>}
             <div className="flex gap-2">
-              <button
-                onClick={() => { setShowNova(false); setNovoNome(''); setCriarErro('') }}
-                className="btn-secondary flex-1 py-2.5"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleCriarInstancia}
-                disabled={criando || !novoNome.trim()}
-                className="btn-primary flex-1 py-2.5"
-              >
+              <button onClick={() => { setShowNova(false); setNovoNome(''); setCriarErro('') }} className="btn-secondary flex-1 py-2.5">Cancelar</button>
+              <button onClick={handleCriarInstancia} disabled={criando || !novoNome.trim()} className="btn-primary flex-1 py-2.5">
                 {criando ? 'Criando...' : 'Criar e conectar'}
               </button>
             </div>
@@ -277,7 +319,6 @@ export default function Contas() {
               <>
                 <p className="text-base font-semibold text-white mb-1">Conectar {qrInstance}</p>
                 <p className="text-xs text-muted mb-5">Abra o WhatsApp → Dispositivos conectados → Conectar dispositivo</p>
-
                 <div className="flex items-center justify-center mb-5" style={{ minHeight: 220 }}>
                   {qrLoading ? (
                     <div className="flex flex-col items-center gap-3">
@@ -285,32 +326,18 @@ export default function Contas() {
                       <p className="text-xs text-muted">Gerando QR Code...</p>
                     </div>
                   ) : qrBase64 ? (
-                    <img
-                      src={qrBase64}
-                      alt="QR Code"
-                      className="w-52 h-52 rounded-xl border border-border"
-                    />
+                    <img src={qrBase64} alt="QR Code" className="w-52 h-52 rounded-xl border border-border" />
                   ) : (
-                    <div className="text-sm text-muted">
-                      Não foi possível gerar o QR Code.
-                    </div>
+                    <div className="text-sm text-muted">Não foi possível gerar o QR Code.</div>
                   )}
                 </div>
-
                 <p className="text-xs text-muted mb-5 flex items-center justify-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
                   Aguardando conexão...
                 </p>
-
                 <div className="flex gap-2">
                   <button onClick={closeQR} className="btn-secondary flex-1 py-2.5">Cancelar</button>
-                  <button
-                    onClick={() => openQR(qrInstance)}
-                    disabled={qrLoading}
-                    className="btn-secondary flex-1 py-2.5"
-                  >
-                    Atualizar QR
-                  </button>
+                  <button onClick={() => openQR(qrInstance)} disabled={qrLoading} className="btn-secondary flex-1 py-2.5">Atualizar QR</button>
                 </div>
               </>
             )}
