@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 const nav = [
   {
@@ -24,6 +25,12 @@ const nav = [
 ]
 
 export default function Sidebar() {
+  const { user, signOut } = useAuth()
+
+  const initials = user?.email
+    ? user.email.slice(0, 2).toUpperCase()
+    : '??'
+
   return (
     <aside className="w-[220px] min-h-screen bg-surface border-r border-border flex flex-col flex-shrink-0">
       {/* Logo */}
@@ -61,15 +68,25 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Footer */}
+      {/* Footer — user + logout */}
       <div className="mx-4 h-px bg-border mt-3" />
-      <div className="px-5 py-4 flex items-center gap-2.5">
-        <div className="w-7 h-7 rounded-full bg-surface-2 border border-border flex items-center justify-center flex-shrink-0">
-          <span className="text-xs font-semibold text-secondary">K</span>
-        </div>
-        <div>
-          <p className="text-[13px] font-medium text-white leading-none">Kaio</p>
-          <p className="text-[11px] text-muted mt-0.5">Nuvant Performance</p>
+      <div className="px-3 py-3">
+        <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg group">
+          <div className="w-7 h-7 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center flex-shrink-0">
+            <span className="text-xs font-semibold text-accent">{initials}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[12px] font-medium text-white leading-none truncate">{user?.email ?? ''}</p>
+          </div>
+          <button
+            onClick={signOut}
+            title="Sair"
+            className="p-1.5 text-muted hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors flex-shrink-0"
+          >
+            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
         </div>
       </div>
     </aside>

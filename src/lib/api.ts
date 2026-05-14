@@ -1,9 +1,15 @@
-import { API_BASE, supabase } from './supabase'
+import { API_BASE, SUPABASE_ANON_KEY, supabase } from './supabase'
+
+let _accessToken: string | null = null
+
+export function setAccessToken(token: string | null) {
+  _accessToken = token
+}
 
 const headers = () => ({
   'Content-Type': 'application/json',
-  apikey:
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYWF6cWF1Y2NseXB4ZmZocGthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMDkwNzMsImV4cCI6MjA5Mjg4NTA3M30.tYaY9tPayRziGhVCnECIEjytM1ykwyWhTt3Mjae54oc',
+  apikey: SUPABASE_ANON_KEY,
+  ...(_accessToken ? { Authorization: `Bearer ${_accessToken}` } : {}),
 })
 
 export interface Instance {

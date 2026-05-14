@@ -13,6 +13,7 @@ const N8N_DISPATCHER = Deno.env.get('N8N_DISPATCHER_URL') ?? ''
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
 
 function supabaseAdmin() {
   return createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
@@ -35,6 +36,19 @@ function err(msg: string, status = 400) {
 
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
+
+  // Verify JWT — reject unauthenticated requests
+  const authHeader = req.headers.get('Authorization')
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
+  if (!token) {
+    return new Response('Unauthorized', { status: 401, headers: CORS })
+  }
+  const authCheck = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: { Authorization: `Bearer ${token}`, apikey: SUPABASE_ANON_KEY },
+  })
+  if (!authCheck.ok) {
+    return new Response('Unauthorized', { status: 401, headers: CORS })
+  }
 
   const url = new URL(req.url)
   const path = url.pathname.replace(/^\/groupshot-api/, '')
