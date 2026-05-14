@@ -164,6 +164,7 @@ export default function CampanhaDetalhe() {
   const [criarLimite, setCriarLimite] = useState(550)
   const [criarInstancia, setCriarInstancia] = useState('')
   const [criandoGrupos, setCriandoGrupos] = useState(false)
+  const [criarError, setCriarError] = useState('')
 
   // Wizard state
   const [wizardStep, setWizardStep] = useState<WizardStep>('acao')
@@ -295,6 +296,7 @@ export default function CampanhaDetalhe() {
   const handleCriarGrupos = async () => {
     if (!campanha || !criarNomeBase.trim() || !criarInstancia) return
     setCriandoGrupos(true)
+    setCriarError('')
     try {
       const created = await createGroups({
         instance: criarInstancia,
@@ -302,21 +304,23 @@ export default function CampanhaDetalhe() {
         quantidade: criarQuantidade,
         limite: criarLimite,
       })
-      // Add created groups to campaign
       const toAdd = created
         .filter(g => g.id)
         .map(g => ({ group_id: g.id, group_name: g.subject, instancia: criarInstancia }))
-      if (toAdd.length > 0) {
-        await addGruposToCampanha(campanha.id, toAdd)
+      if (toAdd.length === 0) {
+        setCriarError('Nenhum grupo foi criado. A Evolution API pode ter rejeitado a criação — verifique se a instância está conectada e tente novamente.')
+        return
       }
+      await addGruposToCampanha(campanha.id, toAdd)
       setShowCriarGrupos(false)
       setCriarNomeBase('')
       setCriarQuantidade(1)
       setCriarLimite(550)
       setCriarInstancia('')
+      setCriarError('')
       load()
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Erro ao criar grupos')
+      setCriarError(e instanceof Error ? e.message : 'Erro ao criar grupos')
     } finally { setCriandoGrupos(false) }
   }
 
@@ -1490,9 +1494,15 @@ export default function CampanhaDetalhe() {
               </div>
             </div>
 
-            <div className="flex gap-2 mt-6">
+            {criarError && (
+              <div className="mt-4 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
+                {criarError}
+              </div>
+            )}
+
+            <div className="flex gap-2 mt-4">
               <button
-                onClick={() => setShowCriarGrupos(false)}
+                onClick={() => { setShowCriarGrupos(false); setCriarError('') }}
                 className="btn-secondary flex-1 py-2.5"
               >
                 Cancelar

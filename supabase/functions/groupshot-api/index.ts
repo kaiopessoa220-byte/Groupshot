@@ -408,21 +408,30 @@ serve(async (req: Request) => {
     const { instance, nomeBase, quantidade, limite } = body
     if (!instance || !nomeBase || !quantidade) return err('instance, nomeBase e quantidade são obrigatórios')
 
-    const results: { id: string; subject: string }[] = []
+    const results: { id: string; subject: string; error?: string }[] = []
     for (let i = 1; i <= quantidade; i++) {
       const subject = `${nomeBase} #${i}`
       try {
         const res = await fetch(`${EVOLUTION_URL}/group/create/${instance}`, {
           method: 'POST',
           headers: evolutionHeaders(),
-          body: JSON.stringify({ subject, participants: [], size: limite }),
+          body: JSON.stringify({ subject, participants: [] }),
         })
         const data = await res.json()
-        const id = data.id ?? data.groupJid ?? data.data?.id ?? ''
-        results.push({ id, subject })
-      } catch {
-        results.push({ id: '', subject })
+        if (!res.ok) {
+          const msg = data?.message ?? data?.error ?? `HTTP ${res.status}`
+          results.push({ id: '', subject, error: String(msg) })
+        } else {
+          const id = data.id ?? data.groupJid ?? data.data?.id ?? ''
+          results.push({ id, subject })
+        }
+      } catch (e) {
+        results.push({ id: '', subject, error: (e as Error).message })
       }
+    }
+    const failed = results.filter(r => !r.id)
+    if (failed.length === results.length && results.length > 0) {
+      return err(`Falha ao criar grupos: ${failed[0].error ?? 'Erro desconhecido'}`, 400)
     }
     return json(results, 201)
   }
