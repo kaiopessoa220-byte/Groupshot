@@ -422,8 +422,12 @@ serve(async (req: Request) => {
           const msg = data?.message ?? data?.error ?? `HTTP ${res.status}`
           results.push({ id: '', subject, error: String(msg) })
         } else {
-          const id = data.id ?? data.groupJid ?? data.data?.id ?? ''
-          results.push({ id, subject })
+          const id = data.id ?? data.groupJid ?? data.jid ?? data.data?.id ?? data.data?.groupJid ?? ''
+          if (!id) {
+            results.push({ id: '', subject, error: `ID não encontrado. Resposta: ${JSON.stringify(data).slice(0, 200)}` })
+          } else {
+            results.push({ id, subject })
+          }
         }
       } catch (e) {
         results.push({ id: '', subject, error: (e as Error).message })
