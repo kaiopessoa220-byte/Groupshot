@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { fetchCampanhas, createCampanha, deleteCampanha } from '../lib/api'
-import type { Campanha } from '../lib/api'
+import { fetchCampanhas, createCampanha, deleteCampanha, fetchCampanhaStats } from '../lib/api'
+import type { Campanha, CampanhaStats } from '../lib/api'
 
 export default function Campanhas() {
   const navigate = useNavigate()
   const [campanhas, setCampanhas] = useState<Campanha[]>([])
+  const [stats, setStats] = useState<Record<string, CampanhaStats>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showNova, setShowNova] = useState(false)
@@ -16,7 +17,14 @@ export default function Campanhas() {
   const load = () => {
     setLoading(true)
     fetchCampanhas()
-      .then(setCampanhas)
+      .then(data => {
+        setCampanhas(data)
+        data.forEach(c => {
+          fetchCampanhaStats(c.id)
+            .then(s => setStats(prev => ({ ...prev, [c.id]: s })))
+            .catch(() => {})
+        })
+      })
       .catch(() => setError('Erro ao carregar campanhas'))
       .finally(() => setLoading(false))
   }
@@ -103,29 +111,34 @@ export default function Campanhas() {
               className="bg-card border border-border rounded-xl overflow-hidden cursor-pointer hover:border-border-2 transition-all group relative"
             >
               {/* Stats row */}
-              <div className="flex items-center gap-4 px-4 pt-3 pb-2.5 border-b border-border/60">
-                <span className="flex items-center gap-1.5 text-xs text-muted">
-                  <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
-                    <rect x="3" y="14" width="7" height="7" rx="1" />
-                    <path strokeLinecap="round" d="M14 14h2m3 0h1m-3 3v1m0 3h1m3-4v4h-3" />
-                  </svg>
-                  {campanha.campanha_grupos.length}
-                </span>
-                <span className="flex items-center gap-1.5 text-xs text-muted">
-                  <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-                  0
-                </span>
-                <span className="text-xs text-muted">% 0.00</span>
-                <span className="flex items-center gap-1.5 text-xs text-muted ml-auto">
-                  <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
-                  </svg>
-                  {campanha.instancias?.length ?? 0}
-                </span>
-              </div>
+              {(() => {
+                const s = stats[campanha.id]
+                const loading = !s
+                return (
+                  <div className="grid grid-cols-3 divide-x divide-border/60 border-b border-border/60">
+                    <div className="px-3 pt-2.5 pb-2 flex flex-col items-center">
+                      <span className="text-sm font-bold text-white">{campanha.campanha_grupos.length}</span>
+                      <span className="text-[10px] text-muted mt-0.5">Grupos</span>
+                    </div>
+                    <div className="px-3 pt-2.5 pb-2 flex flex-col items-center">
+                      <span className="text-sm font-bold text-white">{loading ? '—' : s.participantes.toLocaleString('pt-BR')}</span>
+                      <span className="text-[10px] text-muted mt-0.5">Participantes</span>
+                    </div>
+                    <div className="px-3 pt-2.5 pb-2 flex flex-col items-center">
+                      {loading ? (
+                        <span className="text-sm font-bold text-white">—</span>
+                      ) : (
+                        <span className="text-sm font-bold">
+                          <span className="text-green-400">{s.gruposDisponiveis}</span>
+                          <span className="text-muted font-normal text-xs"> / </span>
+                          <span className="text-red-400">{s.gruposCheios}</span>
+                        </span>
+                      )}
+                      <span className="text-[10px] text-muted mt-0.5">Disp. / Cheios</span>
+                    </div>
+                  </div>
+                )
+              })()}
 
               {/* Main row */}
               <div className="flex items-center gap-3 px-4 py-3">

@@ -520,6 +520,51 @@ serve(async (req: Request) => {
     return json({ results })
   }
 
+  // GET /campanhas/:id/stats
+  const statsMatch = path.match(/^\/campanhas\/([^/]+)\/stats$/)
+  if (req.method === 'GET' && statsMatch) {
+    const db = supabaseAdmin()
+    const { data: grupos, error } = await db
+      .from('campanha_grupos')
+      .select('group_id, instancia')
+      .eq('campanha_id', statsMatch[1])
+    if (error) return err('Erro: ' + error.message, 500)
+    if (!grupos?.length) return json({ participantes: 0, gruposCheios: 0, gruposDisponiveis: 0 })
+
+    const byInstance = new Map<string, string[]>()
+    for (const g of grupos) {
+      const arr = byInstance.get(g.instancia) ?? []
+      arr.push(g.group_id)
+      byInstance.set(g.instancia, arr)
+    }
+
+    const sizeMap = new Map<string, number>()
+    await Promise.all(Array.from(byInstance.entries()).map(async ([inst, ids]) => {
+      try {
+        const res = await fetch(
+          `${EVOLUTION_URL}/group/fetchAllGroups/${inst}?getParticipants=true`,
+          { headers: evolutionHeaders() }
+        )
+        const data = await res.json()
+        const list = Array.isArray(data) ? data : (data.data ?? [])
+        for (const g of list) {
+          if (ids.includes(g.id)) {
+            sizeMap.set(g.id, g.size ?? (Array.isArray(g.participants) ? g.participants.length : 0))
+          }
+        }
+      } catch { /* ignora */ }
+    }))
+
+    let participantes = 0, gruposCheios = 0, gruposDisponiveis = 0
+    for (const g of grupos) {
+      const size = sizeMap.get(g.group_id) ?? 0
+      participantes += size
+      if (size >= 1000) gruposCheios++
+      else gruposDisponiveis++
+    }
+    return json({ participantes, gruposCheios, gruposDisponiveis })
+  }
+
   // POST /campanhas/:id/grupos
   const addGrupos = path.match(/^\/campanhas\/([^/]+)\/grupos$/)
   if (req.method === 'POST' && addGrupos) {

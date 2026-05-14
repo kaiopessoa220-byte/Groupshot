@@ -175,6 +175,18 @@ export async function deleteCampanha(id: string): Promise<void> {
   if (!res.ok) throw new Error(await res.text())
 }
 
+export interface CampanhaStats {
+  participantes: number
+  gruposCheios: number
+  gruposDisponiveis: number
+}
+
+export async function fetchCampanhaStats(id: string): Promise<CampanhaStats> {
+  const res = await fetch(`${API_BASE}/campanhas/${id}/stats`, { headers: headers() })
+  if (!res.ok) throw new Error('Erro ao buscar stats')
+  return res.json()
+}
+
 export async function fetchAtividades(campanhaId: string): Promise<Disparo[]> {
   const res = await fetch(`${API_BASE}/campanhas/${campanhaId}/atividades`, { headers: headers() })
   if (!res.ok) throw new Error('Erro ao buscar atividades')
