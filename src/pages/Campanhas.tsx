@@ -11,6 +11,7 @@ export default function Campanhas() {
   const [showNova, setShowNova] = useState(false)
   const [novoNome, setNovoNome] = useState('')
   const [criando, setCriando] = useState(false)
+  const [search, setSearch] = useState('')
 
   const load = () => {
     setLoading(true)
@@ -44,19 +45,23 @@ export default function Campanhas() {
     } catch { setError('Erro ao excluir') }
   }
 
+  const filtered = campanhas.filter(c =>
+    c.nome.toLowerCase().includes(search.toLowerCase())
+  )
+
   return (
-    <div className="p-8 max-w-3xl mx-auto">
+    <div className="p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <p className="text-xs text-muted uppercase tracking-widest mb-1.5">Campanha</p>
-          <h1 className="text-2xl font-semibold text-white tracking-tight">Campanhas</h1>
-        </div>
-        <button onClick={() => setShowNova(true)} className="btn-primary flex items-center gap-2">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-semibold text-white tracking-tight">Campanhas</h1>
+        <button
+          onClick={() => setShowNova(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg border border-accent text-accent text-sm font-semibold hover:bg-accent hover:text-black transition-colors"
+        >
           <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
           </svg>
-          Nova campanha
+          Campanha
         </button>
       </div>
 
@@ -64,74 +69,105 @@ export default function Campanhas() {
         <div className="mb-5 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{error}</div>
       )}
 
+      {/* Search */}
+      <div className="relative mb-6">
+        <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" width="14" height="14" fill="none" stroke="#71717a" strokeWidth="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8" /><path strokeLinecap="round" d="M21 21l-4.35-4.35" />
+        </svg>
+        <input
+          type="text"
+          placeholder="Buscar"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="input pl-9"
+        />
+      </div>
+
       {loading ? (
         <div className="flex items-center gap-2 text-muted text-sm">
           <div className="w-4 h-4 border-2 border-border border-t-accent rounded-full animate-spin" />
           Carregando...
         </div>
-      ) : campanhas.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <div className="bg-card border border-border rounded-xl px-6 py-16 text-center">
-          <div className="w-10 h-10 rounded-xl bg-surface-2 border border-border flex items-center justify-center mx-auto mb-4">
-            <svg width="18" height="18" fill="none" stroke="#71717a" strokeWidth="1.75" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-            </svg>
-          </div>
           <p className="text-sm font-medium text-white mb-1">Nenhuma campanha</p>
           <p className="text-xs text-muted mb-4">Crie uma campanha para organizar seus grupos</p>
-          <button onClick={() => setShowNova(true)} className="btn-primary text-xs">
-            Criar primeira campanha
-          </button>
+          <button onClick={() => setShowNova(true)} className="btn-primary text-xs">Criar primeira campanha</button>
         </div>
       ) : (
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
-          {/* Table header */}
-          <div className="grid grid-cols-[1fr_80px_80px_40px] items-center px-5 py-2.5 border-b border-border">
-            <span className="text-xs text-muted">Nome</span>
-            <span className="text-xs text-muted text-center">Grupos</span>
-            <span className="text-xs text-muted text-center">Instâncias</span>
-            <span />
-          </div>
-          {/* Rows */}
-          <div className="divide-y divide-border">
-            {campanhas.map(campanha => (
-              <div
-                key={campanha.id}
-                onClick={() => navigate(`/campanhas/${campanha.id}`)}
-                className="grid grid-cols-[1fr_80px_80px_40px] items-center px-5 py-3 cursor-pointer hover:bg-surface transition-colors group"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  {/* Foto ou ícone */}
-                  {campanha.foto_url ? (
-                    <img
-                      src={campanha.foto_url}
-                      alt={campanha.nome}
-                      className="w-8 h-8 rounded-lg object-cover flex-shrink-0"
-                      onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
-                      <svg width="12" height="12" fill="none" stroke="#f5c518" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                      </svg>
-                    </div>
-                  )}
-                  <span className="text-sm font-medium text-white truncate">{campanha.nome}</span>
-                </div>
-                <span className="text-sm text-secondary text-center">{campanha.campanha_grupos.length}</span>
-                <span className="text-sm text-secondary text-center">{campanha.instancias?.length ?? 0}</span>
-                <div className="flex items-center justify-end">
-                  <button
-                    onClick={e => handleDelete(e, campanha.id)}
-                    className="p-1.5 text-muted hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-                  >
-                    <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {filtered.map(campanha => (
+            <div
+              key={campanha.id}
+              onClick={() => navigate(`/campanhas/${campanha.id}`)}
+              className="bg-card border border-border rounded-xl overflow-hidden cursor-pointer hover:border-border-2 transition-all group relative"
+            >
+              {/* Stats row */}
+              <div className="flex items-center gap-4 px-4 pt-3 pb-2.5 border-b border-border/60">
+                <span className="flex items-center gap-1.5 text-xs text-muted">
+                  <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                    <path strokeLinecap="round" d="M14 14h2m3 0h1m-3 3v1m0 3h1m3-4v4h-3" />
+                  </svg>
+                  {campanha.campanha_grupos.length}
+                </span>
+                <span className="flex items-center gap-1.5 text-xs text-muted">
+                  <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                  0
+                </span>
+                <span className="text-xs text-muted">% 0.00</span>
+                <span className="flex items-center gap-1.5 text-xs text-muted ml-auto">
+                  <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+                  </svg>
+                  {campanha.instancias?.length ?? 0}
+                </span>
               </div>
-            ))}
-          </div>
+
+              {/* Main row */}
+              <div className="flex items-center gap-3 px-4 py-3">
+                {campanha.foto_url ? (
+                  <img
+                    src={campanha.foto_url}
+                    alt={campanha.nome}
+                    className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-accent/20 border border-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold text-sm">
+                    {campanha.nome.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
+                    <p className="text-sm font-semibold text-white truncate">{campanha.nome}</p>
+                  </div>
+                  <p className="text-[11px] text-muted truncate pl-4">
+                    {campanha.descricao || `${campanha.campanha_grupos.length} grupos`}
+                  </p>
+                </div>
+
+                <svg width="14" height="14" fill="none" stroke="#52525b" strokeWidth="2" viewBox="0 0 24 24" className="flex-shrink-0 group-hover:stroke-accent transition-colors">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" />
+                </svg>
+              </div>
+
+              {/* Delete on hover */}
+              <button
+                onClick={e => handleDelete(e, campanha.id)}
+                className="absolute top-2 right-2 w-6 h-6 rounded-md bg-red-500/10 text-red-400 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20"
+              >
+                <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+          ))}
         </div>
       )}
 
@@ -151,9 +187,7 @@ export default function Campanhas() {
               className="input mb-4"
             />
             <div className="flex gap-2">
-              <button onClick={() => { setShowNova(false); setNovoNome('') }} className="btn-secondary flex-1 py-2.5">
-                Cancelar
-              </button>
+              <button onClick={() => { setShowNova(false); setNovoNome('') }} className="btn-secondary flex-1 py-2.5">Cancelar</button>
               <button onClick={handleCriar} disabled={criando || !novoNome.trim()} className="btn-primary flex-1 py-2.5">
                 {criando ? 'Criando...' : 'Criar'}
               </button>
