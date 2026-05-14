@@ -147,11 +147,12 @@ export default function CampanhaDetalhe() {
 
   // Add Grupos modal
   const [showAddGrupos, setShowAddGrupos] = useState(false)
-  const [allGroups, setAllGroups] = useState<{ group: Group; instancia: string }[]>([])
-  const [allGroupsLoading, setAllGroupsLoading] = useState(false)
+  const [instGroups, setInstGroups] = useState<Record<string, { groups: Group[]; error: boolean }>>({})
+  const [instLoading, setInstLoading] = useState<Record<string, boolean>>({})
   const [groupSearch, setGroupSearch] = useState('')
   const [selectedGroups, setSelectedGroups] = useState<{ id: string; instancia: string }[]>([])
   const [salvandoGrupos, setSalvandoGrupos] = useState(false)
+  const [filterInst, setFilterInst] = useState<string | 'todas'>('todas')
 
   // Grupos tab profile pictures
   const [groupPics, setGroupPics] = useState<Record<string, string | null>>({})
@@ -205,20 +206,21 @@ export default function CampanhaDetalhe() {
     }
   }, [tab, id])
 
-  // Load groups from all connected instances when modal opens
+  // Load groups per instance when modal opens — triggered by showAddGrupos OR allInstances loading
   useEffect(() => {
-    if (!showAddGrupos || connectedInstances.length === 0) return
-    setAllGroupsLoading(true)
-    setAllGroups([])
-    Promise.all(
-      connectedInstances.map(inst =>
-        fetchGroups(inst.name)
-          .then(gs => gs.map(g => ({ group: g, instancia: inst.name })))
-          .catch(() => [] as { group: Group; instancia: string }[])
-      )
-    ).then(results => setAllGroups(results.flat()))
-      .finally(() => setAllGroupsLoading(false))
-  }, [showAddGrupos])
+    if (!showAddGrupos) return
+    const connected = allInstances.filter(i => i.connectionStatus === 'open')
+    if (connected.length === 0) return
+    connected.forEach(inst => {
+      // Skip if already loaded for this instance
+      if (instGroups[inst.name]) return
+      setInstLoading(prev => ({ ...prev, [inst.name]: true }))
+      fetchGroups(inst.name)
+        .then(gs => setInstGroups(prev => ({ ...prev, [inst.name]: { groups: gs, error: false } })))
+        .catch(() => setInstGroups(prev => ({ ...prev, [inst.name]: { groups: [], error: true } })))
+        .finally(() => setInstLoading(prev => ({ ...prev, [inst.name]: false })))
+    })
+  }, [showAddGrupos, allInstances])
 
   // Load group profile pictures when grupos tab opens
   useEffect(() => {
@@ -270,14 +272,16 @@ export default function CampanhaDetalhe() {
     const novos = selectedGroups
       .filter(sg => !jaAdicionados.has(sg.id))
       .map(sg => {
-        const found = allGroups.find(ag => ag.group.id === sg.id && ag.instancia === sg.instancia)
-        return { group_id: sg.id, group_name: found?.group.subject ?? sg.id, instancia: sg.instancia }
+        const g = instGroups[sg.instancia]?.groups.find(x => x.id === sg.id)
+        return { group_id: sg.id, group_name: g?.subject ?? sg.id, instancia: sg.instancia }
       })
     try {
       if (novos.length > 0) await addGruposToCampanha(campanha.id, novos)
       setShowAddGrupos(false)
       setSelectedGroups([])
-      setAllGroups([])
+      setInstGroups({})
+      setInstLoading({})
+      setFilterInst('todas')
       load()
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Erro ao salvar grupos')
@@ -388,7 +392,15 @@ export default function CampanhaDetalhe() {
   }
 
   const connectedInstances = allInstances.filter(i => i.connectionStatus === 'open')
-  const filteredGroups = allGroups.filter(ag => ag.group.subject.toLowerCase().includes(groupSearch.toLowerCase()))
+
+  const allFlatGroups: { group: Group; instancia: string }[] = Object.entries(instGroups).flatMap(
+    ([inst, { groups }]) => groups.map(g => ({ group: g, instancia: inst }))
+  )
+  const filteredGroups = allFlatGroups.filter(ag => {
+    const matchSearch = ag.group.subject.toLowerCase().includes(groupSearch.toLowerCase())
+    const matchInst = filterInst === 'todas' || ag.instancia === filterInst
+    return matchSearch && matchInst
+  })
 
   // Campaign instances that are connected
   const campInstances = campanha
@@ -1341,8 +1353,49 @@ export default function CampanhaDetalhe() {
                 <span className="text-xs text-accent font-medium">{selectedGroups.length} selecionados</span>
               )}
             </div>
-            <p className="text-xs text-muted mb-4">Grupos de todas as instâncias conectadas ({connectedInstances.length}).</p>
+            <p className="text-xs text-muted mb-4">Grupos de todas as instâncias conectadas.</p>
 
+            {/* Instance filter tabs */}
+            {connectedInstances.length > 1 && (
+              <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+                <button
+                  onClick={() => setFilterInst('todas')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors border ${
+                    filterInst === 'todas'
+                      ? 'bg-accent text-black border-accent'
+                      : 'bg-surface-2 border-border text-muted hover:text-white'
+                  }`}
+                >
+                  Todas
+                </button>
+                {connectedInstances.map(inst => {
+                  const loading = instLoading[inst.name]
+                  const loaded = instGroups[inst.name]
+                  const hasError = loaded?.error
+                  return (
+                    <button
+                      key={inst.name}
+                      onClick={() => setFilterInst(inst.name)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors border flex items-center gap-1.5 ${
+                        filterInst === inst.name
+                          ? 'bg-accent text-black border-accent'
+                          : hasError
+                          ? 'bg-red-500/10 border-red-500/30 text-red-400'
+                          : 'bg-surface-2 border-border text-muted hover:text-white'
+                      }`}
+                    >
+                      {loading && <span className="w-2.5 h-2.5 border border-current border-t-transparent rounded-full animate-spin" />}
+                      {!loading && hasError && <span className="text-red-400">!</span>}
+                      {!loading && loaded && !hasError && <span className="w-1.5 h-1.5 rounded-full bg-green-400" />}
+                      {inst.name}
+                      {loaded && !hasError && <span className="opacity-60">({loaded.groups.length})</span>}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* Search + list */}
             <div className="bg-surface-2 border border-border rounded-xl overflow-hidden mb-5">
               <div className="px-3 py-2 border-b border-border flex items-center gap-2">
                 <svg width="13" height="13" fill="none" stroke="#71717a" strokeWidth="2" viewBox="0 0 24 24">
@@ -1357,13 +1410,20 @@ export default function CampanhaDetalhe() {
                 />
               </div>
               <div className="max-h-64 overflow-y-auto divide-y divide-border">
-                {allGroupsLoading && (
+                {/* Show loading for instances not yet loaded */}
+                {connectedInstances.some(i => instLoading[i.name]) && filteredGroups.length === 0 && (
                   <div className="px-4 py-6 text-muted text-sm text-center flex items-center justify-center gap-2">
                     <div className="w-4 h-4 border-2 border-border border-t-accent rounded-full animate-spin" />
                     Buscando grupos...
                   </div>
                 )}
-                {!allGroupsLoading && filteredGroups.length === 0 && (
+                {/* Error state when instance failed and no groups */}
+                {filterInst !== 'todas' && instGroups[filterInst]?.error && (
+                  <div className="px-4 py-4 text-red-400 text-xs text-center">
+                    Erro ao carregar grupos de <strong>{filterInst}</strong>. Verifique se a instância está conectada.
+                  </div>
+                )}
+                {!connectedInstances.some(i => instLoading[i.name]) && filteredGroups.length === 0 && connectedInstances.length > 0 && !(filterInst !== 'todas' && instGroups[filterInst]?.error) && (
                   <div className="px-4 py-6 text-muted text-sm text-center">Nenhum grupo encontrado</div>
                 )}
                 {filteredGroups.map(({ group: g, instancia }) => {
@@ -1386,11 +1446,13 @@ export default function CampanhaDetalhe() {
                         className="accent-accent w-4 h-4 flex-shrink-0"
                       />
                       <span className="text-sm text-white flex-1 truncate">{g.subject}</span>
-                      <span className="text-[10px] text-muted bg-surface px-1.5 py-0.5 rounded flex-shrink-0">{instancia}</span>
+                      {filterInst === 'todas' && (
+                        <span className="text-[10px] text-muted bg-surface px-1.5 py-0.5 rounded flex-shrink-0">{instancia}</span>
+                      )}
                       {g.size != null && !jaAdicionado && (
                         <span className="text-[11px] text-muted flex-shrink-0">{g.size} part.</span>
                       )}
-                      {jaAdicionado && <span className="text-xs text-muted">já adicionado</span>}
+                      {jaAdicionado && <span className="text-xs text-muted flex-shrink-0">já adicionado</span>}
                     </label>
                   )
                 })}
@@ -1399,7 +1461,7 @@ export default function CampanhaDetalhe() {
 
             <div className="flex gap-2">
               <button
-                onClick={() => { setShowAddGrupos(false); setSelectedGroups([]); setAllGroups([]) }}
+                onClick={() => { setShowAddGrupos(false); setSelectedGroups([]); setInstGroups({}); setInstLoading({}); setFilterInst('todas') }}
                 className="btn-secondary flex-1 py-2.5"
               >
                 Cancelar
