@@ -147,11 +147,10 @@ export default function CampanhaDetalhe() {
 
   // Add Grupos modal
   const [showAddGrupos, setShowAddGrupos] = useState(false)
-  const [selectedInst, setSelectedInst] = useState('')
-  const [groups, setGroups] = useState<Group[]>([])
-  const [loadingGroups, setLoadingGroups] = useState(false)
+  const [allGroups, setAllGroups] = useState<{ group: Group; instancia: string }[]>([])
+  const [allGroupsLoading, setAllGroupsLoading] = useState(false)
   const [groupSearch, setGroupSearch] = useState('')
-  const [selectedGroups, setSelectedGroups] = useState<string[]>([])
+  const [selectedGroups, setSelectedGroups] = useState<{ id: string; instancia: string }[]>([])
   const [salvandoGrupos, setSalvandoGrupos] = useState(false)
 
   // Grupos tab profile pictures
@@ -206,11 +205,20 @@ export default function CampanhaDetalhe() {
     }
   }, [tab, id])
 
+  // Load groups from all connected instances when modal opens
   useEffect(() => {
-    if (!selectedInst) { setGroups([]); return }
-    setLoadingGroups(true)
-    fetchGroups(selectedInst).then(setGroups).catch(() => {}).finally(() => setLoadingGroups(false))
-  }, [selectedInst])
+    if (!showAddGrupos || connectedInstances.length === 0) return
+    setAllGroupsLoading(true)
+    setAllGroups([])
+    Promise.all(
+      connectedInstances.map(inst =>
+        fetchGroups(inst.name)
+          .then(gs => gs.map(g => ({ group: g, instancia: inst.name })))
+          .catch(() => [] as { group: Group; instancia: string }[])
+      )
+    ).then(results => setAllGroups(results.flat()))
+      .finally(() => setAllGroupsLoading(false))
+  }, [showAddGrupos])
 
   // Load group profile pictures when grupos tab opens
   useEffect(() => {
@@ -256,18 +264,20 @@ export default function CampanhaDetalhe() {
   }
 
   const handleSalvarGrupos = async () => {
-    if (!campanha || !selectedInst || selectedGroups.length === 0) return
+    if (!campanha || selectedGroups.length === 0) return
     setSalvandoGrupos(true)
     const jaAdicionados = new Set(campanha.campanha_grupos.map(g => g.group_id))
-    const novos = groups
-      .filter(g => selectedGroups.includes(g.id) && !jaAdicionados.has(g.id))
-      .map(g => ({ group_id: g.id, group_name: g.subject, instancia: selectedInst }))
+    const novos = selectedGroups
+      .filter(sg => !jaAdicionados.has(sg.id))
+      .map(sg => {
+        const found = allGroups.find(ag => ag.group.id === sg.id && ag.instancia === sg.instancia)
+        return { group_id: sg.id, group_name: found?.group.subject ?? sg.id, instancia: sg.instancia }
+      })
     try {
       if (novos.length > 0) await addGruposToCampanha(campanha.id, novos)
       setShowAddGrupos(false)
       setSelectedGroups([])
-      setSelectedInst('')
-      setGroups([])
+      setAllGroups([])
       load()
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Erro ao salvar grupos')
@@ -378,7 +388,7 @@ export default function CampanhaDetalhe() {
   }
 
   const connectedInstances = allInstances.filter(i => i.connectionStatus === 'open')
-  const filteredGroups = groups.filter(g => g.subject.toLowerCase().includes(groupSearch.toLowerCase()))
+  const filteredGroups = allGroups.filter(ag => ag.group.subject.toLowerCase().includes(groupSearch.toLowerCase()))
 
   // Campaign instances that are connected
   const campInstances = campanha
@@ -1325,82 +1335,71 @@ export default function CampanhaDetalhe() {
       {showAddGrupos && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-surface border border-border rounded-xl w-full max-w-lg p-6 shadow-modal">
-            <h2 className="text-base font-semibold mb-1">Adicionar grupos</h2>
-            <p className="text-xs text-muted mb-5">Selecione a instância e os grupos que deseja adicionar.</p>
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-base font-semibold">Adicionar grupos</h2>
+              {selectedGroups.length > 0 && (
+                <span className="text-xs text-accent font-medium">{selectedGroups.length} selecionados</span>
+              )}
+            </div>
+            <p className="text-xs text-muted mb-4">Grupos de todas as instâncias conectadas ({connectedInstances.length}).</p>
 
-            <div className="mb-4">
-              <p className="text-xs text-muted uppercase tracking-wider mb-2">Instância</p>
-              <div className="flex flex-wrap gap-2">
-                {connectedInstances.length === 0 && <span className="text-muted text-sm">Nenhuma instância conectada</span>}
-                {connectedInstances.map(inst => (
-                  <button
-                    key={inst.name}
-                    onClick={() => setSelectedInst(inst.name)}
-                    className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
-                      selectedInst === inst.name
-                        ? 'bg-accent text-black border-accent'
-                        : 'bg-surface-2 border-border text-muted hover:text-white hover:border-border-2'
-                    }`}
-                  >
-                    {inst.name}
-                  </button>
-                ))}
+            <div className="bg-surface-2 border border-border rounded-xl overflow-hidden mb-5">
+              <div className="px-3 py-2 border-b border-border flex items-center gap-2">
+                <svg width="13" height="13" fill="none" stroke="#71717a" strokeWidth="2" viewBox="0 0 24 24">
+                  <circle cx="11" cy="11" r="8" /><path strokeLinecap="round" d="M21 21l-4.35-4.35" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Buscar grupos..."
+                  value={groupSearch}
+                  onChange={e => setGroupSearch(e.target.value)}
+                  className="flex-1 bg-transparent text-sm text-white placeholder-muted focus:outline-none"
+                />
+              </div>
+              <div className="max-h-64 overflow-y-auto divide-y divide-border">
+                {allGroupsLoading && (
+                  <div className="px-4 py-6 text-muted text-sm text-center flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-border border-t-accent rounded-full animate-spin" />
+                    Buscando grupos...
+                  </div>
+                )}
+                {!allGroupsLoading && filteredGroups.length === 0 && (
+                  <div className="px-4 py-6 text-muted text-sm text-center">Nenhum grupo encontrado</div>
+                )}
+                {filteredGroups.map(({ group: g, instancia }) => {
+                  const jaAdicionado = campanha.campanha_grupos.some(cg => cg.group_id === g.id)
+                  const isSelected = selectedGroups.some(sg => sg.id === g.id && sg.instancia === instancia)
+                  return (
+                    <label
+                      key={`${instancia}:${g.id}`}
+                      className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-surface transition-colors ${jaAdicionado ? 'opacity-40 cursor-default' : ''}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        disabled={jaAdicionado}
+                        onChange={() => setSelectedGroups(prev =>
+                          isSelected
+                            ? prev.filter(sg => !(sg.id === g.id && sg.instancia === instancia))
+                            : [...prev, { id: g.id, instancia }]
+                        )}
+                        className="accent-accent w-4 h-4 flex-shrink-0"
+                      />
+                      <span className="text-sm text-white flex-1 truncate">{g.subject}</span>
+                      <span className="text-[10px] text-muted bg-surface px-1.5 py-0.5 rounded flex-shrink-0">{instancia}</span>
+                      {g.size != null && !jaAdicionado && (
+                        <span className="text-[11px] text-muted flex-shrink-0">{g.size} part.</span>
+                      )}
+                      {jaAdicionado && <span className="text-xs text-muted">já adicionado</span>}
+                    </label>
+                  )
+                })}
               </div>
             </div>
 
-            {selectedInst && (
-              <div className="bg-surface-2 border border-border rounded-xl overflow-hidden mb-5">
-                <div className="px-3 py-2 border-b border-border flex items-center gap-2">
-                  <svg width="13" height="13" fill="none" stroke="#71717a" strokeWidth="2" viewBox="0 0 24 24">
-                    <circle cx="11" cy="11" r="8" /><path strokeLinecap="round" d="M21 21l-4.35-4.35" />
-                  </svg>
-                  <input
-                    type="text"
-                    placeholder="Buscar grupos..."
-                    value={groupSearch}
-                    onChange={e => setGroupSearch(e.target.value)}
-                    className="flex-1 bg-transparent text-sm text-white placeholder-muted focus:outline-none"
-                  />
-                  {selectedGroups.length > 0 && (
-                    <span className="text-xs text-accent">{selectedGroups.length} sel.</span>
-                  )}
-                </div>
-                <div className="max-h-52 overflow-y-auto divide-y divide-border">
-                  {loadingGroups && <div className="px-4 py-4 text-muted text-sm text-center">Carregando...</div>}
-                  {!loadingGroups && filteredGroups.length === 0 && (
-                    <div className="px-4 py-4 text-muted text-sm text-center">Nenhum grupo encontrado</div>
-                  )}
-                  {filteredGroups.map(g => {
-                    const jaAdicionado = campanha.campanha_grupos.some(cg => cg.group_id === g.id)
-                    return (
-                      <label
-                        key={g.id}
-                        className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-surface transition-colors ${jaAdicionado ? 'opacity-40 cursor-default' : ''}`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedGroups.includes(g.id)}
-                          disabled={jaAdicionado}
-                          onChange={() => setSelectedGroups(prev =>
-                            prev.includes(g.id) ? prev.filter(x => x !== g.id) : [...prev, g.id]
-                          )}
-                          className="accent-accent w-4 h-4 flex-shrink-0"
-                        />
-                        <span className="text-sm text-white flex-1 truncate">{g.subject}</span>
-                        {g.size != null && !jaAdicionado && (
-                          <span className="text-[11px] text-muted flex-shrink-0">{g.size} part.</span>
-                        )}
-                        {jaAdicionado && <span className="text-xs text-muted">já adicionado</span>}
-                      </label>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-
             <div className="flex gap-2">
               <button
-                onClick={() => { setShowAddGrupos(false); setSelectedGroups([]); setSelectedInst(''); setGroups([]) }}
+                onClick={() => { setShowAddGrupos(false); setSelectedGroups([]); setAllGroups([]) }}
                 className="btn-secondary flex-1 py-2.5"
               >
                 Cancelar
