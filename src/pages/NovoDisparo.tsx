@@ -37,8 +37,17 @@ export default function NovoDisparo() {
   useEffect(() => {
     if (selectedInstances.length === 0) { setGroups([]); return }
     setLoadingGroups(true)
-    fetchGroups(selectedInstances[0])
-      .then(setGroups)
+    Promise.all(selectedInstances.map(inst => fetchGroups(inst).catch(() => [])))
+      .then(results => {
+        // junta grupos de todas as instâncias, deduplica por ID
+        const seen = new Set<string>()
+        const merged = results.flat().filter(g => {
+          if (seen.has(g.id)) return false
+          seen.add(g.id)
+          return true
+        })
+        setGroups(merged)
+      })
       .catch(() => setError('Erro ao carregar grupos'))
       .finally(() => setLoadingGroups(false))
   }, [selectedInstances])
