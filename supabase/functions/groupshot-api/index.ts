@@ -403,10 +403,16 @@ serve(async (req: Request) => {
 
   // POST /group/create-batch
   if (req.method === 'POST' && path === '/group/create-batch') {
-    let body: { instance: string; nomeBase: string; quantidade: number; limite: number }
+    let body: { instance: string; nomeBase: string; quantidade: number; limite: number; ownerJid?: string }
     try { body = await req.json() } catch { return err('JSON inválido') }
-    const { instance, nomeBase, quantidade, limite } = body
+    const { instance, nomeBase, quantidade, ownerJid } = body
     if (!instance || !nomeBase || !quantidade) return err('instance, nomeBase e quantidade são obrigatórios')
+
+    // Evolution API requires at least one participant — use the instance's own number
+    const jid = ownerJid
+      ? (ownerJid.includes('@') ? ownerJid : `${ownerJid.replace(/\D/g, '')}@s.whatsapp.net`)
+      : null
+    const participants = jid ? [jid] : []
 
     const results: { id: string; subject: string; error?: string }[] = []
     for (let i = 1; i <= quantidade; i++) {
@@ -415,7 +421,7 @@ serve(async (req: Request) => {
         const res = await fetch(`${EVOLUTION_URL}/group/create/${instance}`, {
           method: 'POST',
           headers: evolutionHeaders(),
-          body: JSON.stringify({ subject, participants: [] }),
+          body: JSON.stringify({ subject, participants }),
         })
         const data = await res.json()
         if (!res.ok) {

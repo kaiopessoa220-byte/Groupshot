@@ -298,11 +298,13 @@ export default function CampanhaDetalhe() {
     setCriandoGrupos(true)
     setCriarError('')
     try {
+      const selectedInst = connectedInstances.find(i => i.name === criarInstancia)
       const created = await createGroups({
         instance: criarInstancia,
         nomeBase: criarNomeBase.trim(),
         quantidade: criarQuantidade,
         limite: criarLimite,
+        ownerJid: selectedInst?.ownerJid,
       })
       const toAdd = created
         .filter(g => g.id)

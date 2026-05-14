@@ -238,6 +238,7 @@ export async function createGroups(payload: {
   nomeBase: string
   quantidade: number
   limite: number
+  ownerJid?: string
 }): Promise<{ id: string; subject: string }[]> {
   const res = await fetch(`${API_BASE}/group/create-batch`, {
     method: 'POST',
