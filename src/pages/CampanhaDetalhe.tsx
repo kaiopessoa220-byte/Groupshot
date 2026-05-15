@@ -1010,6 +1010,7 @@ export default function CampanhaDetalhe() {
                 const now = new Date()
                 const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
                 return (
+                  <>
                   <div className="flex gap-6">
                     {/* Editor */}
                     <div className="flex-1 space-y-4 min-w-0">
@@ -1155,6 +1156,7 @@ export default function CampanhaDetalhe() {
                       })}
                     </div>
                   </div>
+                  </>
                 )
               })()}
 
