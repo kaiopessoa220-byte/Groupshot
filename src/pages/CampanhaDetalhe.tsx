@@ -176,6 +176,7 @@ export default function CampanhaDetalhe() {
   const [wizardContent, setWizardContent] = useState<Record<string, unknown>>({})
   const [wizardRunning, setWizardRunning] = useState(false)
   const [wizardResult, setWizardResult] = useState<string | null>(null)
+  const [wizardLastSuccess, setWizardLastSuccess] = useState<string | null>(null)
 
   // Instance profile pictures (for wizard contas step)
   const [instPics, setInstPics] = useState<Record<string, string | null>>({})
@@ -372,7 +373,11 @@ export default function CampanhaDetalhe() {
           agendadoPara: baseTime,
           groupIds: wizardGroupsMode === 'especificos' ? groupIds : undefined,
         })
-        setWizardResult(`Disparo criado! ${result.itens} grupos agendados.`)
+        // Reset content and go back to conteudo step for next dispatch
+        setWizardContent({})
+        setImagePreview(null)
+        setWizardLastSuccess(`Disparo criado! ${result.itens} grupos agendados.`)
+        setWizardStep('conteudo')
       } else {
         const result = await executeGroupAction({
           action: wizardAction,
@@ -981,6 +986,19 @@ export default function CampanhaDetalhe() {
           {/* Step: Conteúdo */}
           {wizardStep === 'conteudo' && !wizardResult && (
             <div className="space-y-4">
+              {wizardLastSuccess && (
+                <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-sm">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className="flex-shrink-0">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  {wizardLastSuccess}
+                  <button onClick={() => setWizardLastSuccess(null)} className="ml-auto text-green-400/60 hover:text-green-400">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              )}
               <p className="text-xs text-muted uppercase tracking-wider mb-3">Conteúdo da ação</p>
 
               {wizardAction === 'enviar-mensagem' && (() => {
