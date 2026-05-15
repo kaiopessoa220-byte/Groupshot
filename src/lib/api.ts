@@ -215,6 +215,8 @@ export interface DispararCampanhaPayload {
   mentionAll: boolean
   agendadoPara: string
   groupIds?: string[]
+  intervaloMin?: number
+  intervaloMax?: number
 }
 
 export async function dispararCampanha(

@@ -175,10 +175,14 @@ serve(async (req: Request) => {
       agendadoPara: string
       groupIds: string[]
       instancias: string[]
+      intervaloMin?: number
+      intervaloMax?: number
     }
     try { body = await req.json() } catch { return err('JSON inválido') }
 
     const { nome, mensagem, imageUrl, imageMimetype, mentionAll, agendadoPara, groupIds, instancias } = body
+    const intervaloMin = (body.intervaloMin ?? 40) * 1000
+    const intervaloMax = (body.intervaloMax ?? 60) * 1000
 
     if (!mensagem || !groupIds?.length || !instancias?.length) {
       return err('mensagem, groupIds e instancias são obrigatórios')
@@ -231,7 +235,7 @@ serve(async (req: Request) => {
 
     let acumulado = 0
     for (let i = 0; i < groupIds.length; i++) {
-      if (i > 0) acumulado += 40000 + Math.floor(Math.random() * 20001)
+      if (i > 0) acumulado += intervaloMin + Math.floor(Math.random() * (intervaloMax - intervaloMin + 1))
       const sendAt = new Date(baseTime + acumulado).toISOString()
       const instancia = instancias[Math.floor(Math.random() * instancias.length)]
       itens.push({
@@ -370,7 +374,7 @@ serve(async (req: Request) => {
   const dispararMatch = path.match(/^\/campanhas\/([^/]+)\/disparar$/)
   if (req.method === 'POST' && dispararMatch) {
     const cId = dispararMatch[1]
-    let body: { nome?: string; mensagem: string; imageUrl?: string; imageMimetype?: string; mentionAll: boolean; agendadoPara: string; groupIds?: string[] }
+    let body: { nome?: string; mensagem: string; imageUrl?: string; imageMimetype?: string; mentionAll: boolean; agendadoPara: string; groupIds?: string[]; intervaloMin?: number; intervaloMax?: number }
     try { body = await req.json() } catch { return err('JSON inválido') }
     if (!body.mensagem) return err('mensagem obrigatória')
 
@@ -386,6 +390,8 @@ serve(async (req: Request) => {
 
     const { mensagem, imageUrl, imageMimetype, mentionAll, agendadoPara } = body
     const baseTime = new Date(agendadoPara).getTime()
+    const intervaloMin = (body.intervaloMin ?? 40) * 1000
+    const intervaloMax = (body.intervaloMax ?? 60) * 1000
 
     // Filter groups if specific groupIds provided
     const targetGroups = body.groupIds?.length
@@ -411,7 +417,7 @@ serve(async (req: Request) => {
 
     let acumulado = 0
     const itens = targetGroups.map((g: { group_id: string; group_name: string; instancia: string }, i: number) => {
-      if (i > 0) acumulado += 40000 + Math.floor(Math.random() * 20001)
+      if (i > 0) acumulado += intervaloMin + Math.floor(Math.random() * (intervaloMax - intervaloMin + 1))
       const instancia = campanha.instancias[Math.floor(Math.random() * campanha.instancias.length)]
       return { disparo_id: disparo.id, group_id: g.group_id, group_name: g.group_name, instancia, send_at: new Date(baseTime + acumulado).toISOString(), status: 'pendente' }
     })
