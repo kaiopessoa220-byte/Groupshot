@@ -1017,9 +1017,9 @@ export default function CampanhaDetalhe() {
                 ] as const
                 const selectedOpt = intervalOpts.find(o => o.min === curMin) ?? intervalOpts[1]
                 return (
-                  <div className="flex gap-0 min-h-0">
+                  <div className="flex border border-border rounded-xl overflow-hidden min-h-0 divide-x divide-border">
                     {/* Left: Editor de mensagens */}
-                    <div className="flex-1 min-w-0 border border-border rounded-l-xl overflow-hidden flex flex-col" style={{ borderRight: 'none' }}>
+                    <div className="flex-1 min-w-0 flex flex-col">
                       <div className="flex items-center justify-between px-4 py-2.5 border-b border-border" style={{ background: '#202c33' }}>
                         <div className="flex items-center gap-2">
                           <button
@@ -1092,7 +1092,7 @@ export default function CampanhaDetalhe() {
                     </div>
 
                     {/* Center: Textarea */}
-                    <div className="w-80 flex-shrink-0 border border-border flex flex-col" style={{ borderLeft: 'none', borderRight: 'none' }}>
+                    <div className="w-80 flex-shrink-0 flex flex-col">
                       <textarea
                         placeholder="Escreva a sua mensagem"
                         value={msg}
@@ -1119,7 +1119,7 @@ export default function CampanhaDetalhe() {
                     </div>
 
                     {/* Right: Options sidebar */}
-                    <div className="w-52 flex-shrink-0 border border-border rounded-r-xl overflow-hidden self-start" style={{ borderLeft: 'none' }}>
+                    <div className="w-52 flex-shrink-0 self-start">
                       <div
                         className="flex items-center justify-between px-4 py-3.5 border-b border-border cursor-pointer hover:bg-surface-2 transition-colors"
                         onClick={() => setWizardContent(prev => ({ ...prev, mentionAll: !mentionAll }))}
