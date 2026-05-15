@@ -355,7 +355,7 @@ export default function CampanhaDetalhe() {
       if (wizardAction === 'enviar-mensagem') {
         let imageUrl = ''
         let imageMimetype = ''
-        const msgContent = wizardContent as { mensagem?: string; mentionAll?: boolean; agendadoPara?: string; imageFile?: File }
+        const msgContent = wizardContent as { mensagem?: string; mentionAll?: boolean; agendadoPara?: string; imageFile?: File; intervaloMin?: number; intervaloMax?: number }
         if (msgContent.imageFile) {
           imageUrl = await uploadImage(msgContent.imageFile as File)
           imageMimetype = (msgContent.imageFile as File).type
