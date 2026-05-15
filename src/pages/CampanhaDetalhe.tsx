@@ -1007,86 +1007,21 @@ export default function CampanhaDetalhe() {
                 const msg = (wizardContent as { mensagem?: string }).mensagem ?? ''
                 const mentionAll = (wizardContent as { mentionAll?: boolean }).mentionAll ?? false
                 const agendadoPara = (wizardContent as { agendadoPara?: string }).agendadoPara ?? ''
+                const curMin = (wizardContent as { intervaloMin?: number }).intervaloMin ?? 40
                 const now = new Date()
                 const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                const intervalOpts = [
+                  { label: '10–20s', min: 10, max: 20, desc: 'Rápido' },
+                  { label: '40–60s', min: 40, max: 60, desc: 'Padrão' },
+                  { label: '60–120s', min: 60, max: 120, desc: 'Seguro' },
+                ] as const
+                const selectedOpt = intervalOpts.find(o => o.min === curMin) ?? intervalOpts[1]
                 return (
-                  <div className="flex gap-6">
-                    {/* Editor */}
-                    <div className="flex-1 space-y-4 min-w-0">
-                      <div>
-                        <label className="block text-xs text-muted uppercase tracking-wider mb-2">Mensagem</label>
-                        <textarea
-                          placeholder="Digite a mensagem..."
-                          value={msg}
-                          onChange={e => setWizardContent(prev => ({ ...prev, mensagem: e.target.value }))}
-                          rows={5}
-                          className="input resize-none"
-                        />
-                        <p className="text-xs text-muted mt-1">{msg.length} caracteres</p>
-                      </div>
-                      <div>
-                        <label className="block text-xs text-muted uppercase tracking-wider mb-2">Imagem <span className="normal-case">(opcional)</span></label>
-                        <div
-                          onClick={() => wizardFileRef.current?.click()}
-                          onDrop={e => {
-                            e.preventDefault()
-                            const f = e.dataTransfer.files[0]
-                            if (f && f.type.startsWith('image/')) {
-                              setWizardContent(prev => ({ ...prev, imageFile: f }))
-                              setImagePreview(URL.createObjectURL(f))
-                            }
-                          }}
-                          onDragOver={e => e.preventDefault()}
-                          className="border border-dashed border-border rounded-xl p-4 text-center cursor-pointer hover:border-border-2 transition-colors"
-                        >
-                          {imagePreview ? (
-                            <div className="relative inline-block">
-                              <img src={imagePreview} alt="preview" className="max-h-24 rounded-lg mx-auto" />
-                              <button
-                                onClick={e => { e.stopPropagation(); setWizardContent(prev => ({ ...prev, imageFile: undefined })); setImagePreview(null) }}
-                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
-                              >×</button>
-                            </div>
-                          ) : (
-                            <div>
-                              <svg width="18" height="18" fill="none" stroke="#71717a" strokeWidth="1.5" viewBox="0 0 24 24" className="mx-auto mb-1.5">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                              <p className="text-xs text-muted">Arraste ou clique para selecionar</p>
-                            </div>
-                          )}
-                        </div>
-                        <input ref={wizardFileRef} type="file" accept="image/*" className="hidden"
-                          onChange={e => {
-                            const f = e.target.files?.[0]
-                            if (f) { setWizardContent(prev => ({ ...prev, imageFile: f })); setImagePreview(URL.createObjectURL(f)) }
-                          }} />
-                      </div>
-                      <label className="flex items-center gap-3 cursor-pointer select-none">
-                        <div
-                          onClick={() => setWizardContent(prev => ({ ...prev, mentionAll: !mentionAll }))}
-                          className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${mentionAll ? 'bg-accent' : 'bg-surface-2 border border-border'}`}
-                        >
-                          <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${mentionAll ? 'translate-x-4' : 'translate-x-0.5'}`} />
-                        </div>
-                        <span className="text-sm text-secondary">Mencionar todos (@todos)</span>
-                      </label>
-                      <div>
-                        <label className="block text-xs text-muted uppercase tracking-wider mb-2">Agendar para <span className="normal-case">(BRT — UTC-3)</span></label>
-                        <input
-                          type="datetime-local"
-                          value={agendadoPara}
-                          onChange={e => setWizardContent(prev => ({ ...prev, agendadoPara: e.target.value }))}
-                          className="input w-auto"
-                        />
-                      </div>
-                    </div>
-
-                    {/* WhatsApp Preview */}
-                    <div className="w-64 flex-shrink-0">
+                  <div className="flex gap-4">
+                    {/* Left: WhatsApp Preview */}
+                    <div className="w-56 flex-shrink-0">
                       <p className="text-xs text-muted uppercase tracking-wider mb-2">Pré-visualização</p>
                       <div className="rounded-2xl overflow-hidden border border-border" style={{ background: '#111b21' }}>
-                        {/* Chat header */}
                         <div className="flex items-center gap-2.5 px-3 py-2.5" style={{ background: '#202c33' }}>
                           <div className="w-8 h-8 rounded-full bg-accent/20 border border-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold text-xs">
                             {campanha.nome.slice(0, 2).toUpperCase()}
@@ -1096,19 +1031,12 @@ export default function CampanhaDetalhe() {
                             <p className="text-[10px]" style={{ color: '#8696a0' }}>{campanha.campanha_grupos.length} participantes</p>
                           </div>
                         </div>
-                        {/* Chat body */}
-                        <div className="px-3 py-4 min-h-36 flex flex-col justify-end gap-1" style={{ background: '#0b141a' }}>
+                        <div className="px-3 py-4 min-h-40 flex flex-col justify-end gap-1" style={{ background: '#0b141a' }}>
                           {(msg || imagePreview) ? (
-                            <div className="self-end max-w-[90%] rounded-xl rounded-tr-sm px-2.5 pt-2 pb-1.5 text-xs relative" style={{ background: '#005c4b' }}>
-                              {imagePreview && (
-                                <img src={imagePreview} alt="" className="rounded-lg mb-1.5 w-full object-cover max-h-32" />
-                              )}
-                              {msg && (
-                                <p className="text-white text-[11px] leading-[1.4] whitespace-pre-wrap break-words">{msg}</p>
-                              )}
-                              {mentionAll && (
-                                <p className="text-[10px] mt-0.5" style={{ color: '#53bdeb' }}>@todos</p>
-                              )}
+                            <div className="self-end max-w-[90%] rounded-xl rounded-tr-sm px-2.5 pt-2 pb-1.5 relative" style={{ background: '#005c4b' }}>
+                              {imagePreview && <img src={imagePreview} alt="" className="rounded-lg mb-1.5 w-full object-cover max-h-28" />}
+                              {msg && <p className="text-white text-[11px] leading-[1.4] whitespace-pre-wrap break-words">{msg}</p>}
+                              {mentionAll && <p className="text-[10px] mt-0.5" style={{ color: '#53bdeb' }}>@todos</p>}
                               <div className="flex items-center justify-end gap-1 mt-1">
                                 <span className="text-[9px]" style={{ color: '#8696a0' }}>{timeStr}</span>
                                 <svg width="14" height="8" viewBox="0 0 16 11" fill="none">
@@ -1125,40 +1053,87 @@ export default function CampanhaDetalhe() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Center: Editor */}
+                    <div className="flex-1 min-w-0 space-y-4">
+                      <div>
+                        <label className="block text-xs text-muted uppercase tracking-wider mb-2">Mensagem</label>
+                        <textarea
+                          placeholder="Digite a mensagem..."
+                          value={msg}
+                          onChange={e => setWizardContent(prev => ({ ...prev, mensagem: e.target.value }))}
+                          rows={6}
+                          className="input resize-none"
+                        />
+                        <p className="text-xs text-muted mt-1">{msg.length} caracteres</p>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-muted uppercase tracking-wider mb-2">Imagem <span className="normal-case">(opcional)</span></label>
+                        <div
+                          onClick={() => wizardFileRef.current?.click()}
+                          onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f?.type.startsWith('image/')) { setWizardContent(prev => ({ ...prev, imageFile: f })); setImagePreview(URL.createObjectURL(f)) } }}
+                          onDragOver={e => e.preventDefault()}
+                          className="border border-dashed border-border rounded-xl p-4 text-center cursor-pointer hover:border-border-2 transition-colors"
+                        >
+                          {imagePreview ? (
+                            <div className="relative inline-block">
+                              <img src={imagePreview} alt="preview" className="max-h-24 rounded-lg mx-auto" />
+                              <button onClick={e => { e.stopPropagation(); setWizardContent(prev => ({ ...prev, imageFile: undefined })); setImagePreview(null) }} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">×</button>
+                            </div>
+                          ) : (
+                            <div>
+                              <svg width="18" height="18" fill="none" stroke="#71717a" strokeWidth="1.5" viewBox="0 0 24 24" className="mx-auto mb-1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                              <p className="text-xs text-muted">Arraste ou clique para selecionar</p>
+                            </div>
+                          )}
+                        </div>
+                        <input ref={wizardFileRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) { setWizardContent(prev => ({ ...prev, imageFile: f })); setImagePreview(URL.createObjectURL(f)) } }} />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-muted uppercase tracking-wider mb-2">Agendar para <span className="normal-case">(BRT — UTC-3)</span></label>
+                        <input type="datetime-local" value={agendadoPara} onChange={e => setWizardContent(prev => ({ ...prev, agendadoPara: e.target.value }))} className="input w-auto" />
+                      </div>
+                    </div>
+
+                    {/* Right: Options sidebar */}
+                    <div className="w-52 flex-shrink-0 border border-border rounded-xl overflow-hidden self-start">
+                      {/* Mencionar todos */}
+                      <div className="flex items-center justify-between px-4 py-3.5 border-b border-border">
+                        <span className="text-sm text-secondary">Marcar todos</span>
+                        <div
+                          onClick={() => setWizardContent(prev => ({ ...prev, mentionAll: !mentionAll }))}
+                          className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 cursor-pointer ${mentionAll ? 'bg-accent' : 'bg-surface-2 border border-border'}`}
+                        >
+                          <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${mentionAll ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                        </div>
+                      </div>
+                      {/* Velocidade de envio */}
+                      <div className="px-4 py-3.5">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-sm text-secondary">Velocidade</span>
+                          <span className="text-xs text-muted">{selectedOpt.desc}</span>
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          {intervalOpts.map(opt => {
+                            const sel = curMin === opt.min
+                            return (
+                              <button
+                                key={opt.label}
+                                type="button"
+                                onClick={() => setWizardContent(prev => ({ ...prev, intervaloMin: opt.min, intervaloMax: opt.max }))}
+                                className={`flex items-center justify-between w-full px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${sel ? 'bg-accent text-black border-accent' : 'bg-surface-2 border-border text-muted hover:text-white hover:border-border-2'}`}
+                              >
+                                <span>{opt.desc}</span>
+                                <span className={`${sel ? 'opacity-70' : 'opacity-50'}`}>{opt.label}</span>
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )
               })()}
-
-              {wizardAction === 'enviar-mensagem' && (
-                <div>
-                  <label className="block text-xs text-muted uppercase tracking-wider mb-2">Intervalo entre grupos</label>
-                  <div className="flex gap-2">
-                    {([
-                      { label: '10–20s', min: 10, max: 20, desc: 'Rápido' },
-                      { label: '40–60s', min: 40, max: 60, desc: 'Padrão' },
-                      { label: '60–120s', min: 60, max: 120, desc: 'Seguro' },
-                    ] as const).map(opt => {
-                      const curMin = (wizardContent as { intervaloMin?: number }).intervaloMin ?? 40
-                      const selected = curMin === opt.min
-                      return (
-                        <button
-                          key={opt.label}
-                          type="button"
-                          onClick={() => setWizardContent(prev => ({ ...prev, intervaloMin: opt.min, intervaloMax: opt.max }))}
-                          className={`flex-1 py-2.5 px-3 rounded-lg border text-xs font-medium transition-colors ${
-                            selected
-                              ? 'bg-accent text-black border-accent'
-                              : 'bg-surface-2 border-border text-muted hover:text-white hover:border-border-2'
-                          }`}
-                        >
-                          <span className="font-semibold">{opt.label}</span>
-                          <span className="ml-1.5 opacity-60">{opt.desc}</span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
 
               {(wizardAction === 'trocar-nome') && (
                 <div>
