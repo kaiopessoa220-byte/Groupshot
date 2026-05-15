@@ -354,32 +354,47 @@ export default function CampanhaDetalhe() {
         : wizardGroupIds
 
       if (wizardAction === 'enviar-mensagem') {
-        let imageUrl = ''
-        let imageMimetype = ''
-        const msgContent = wizardContent as { mensagem?: string; mentionAll?: boolean; agendadoPara?: string; imageFile?: File; intervaloMin?: number; intervaloMax?: number }
-        if (msgContent.imageFile) {
-          imageUrl = await uploadImage(msgContent.imageFile as File)
-          imageMimetype = (msgContent.imageFile as File).type
-        }
+        const msgContent = wizardContent as { mensagem?: string; mentionAll?: boolean; agendadoPara?: string; imageFile?: File; intervaloMin?: number; intervaloMax?: number; blocos?: Array<{ mensagem: string; imageFile?: File }> }
+        const intervaloMin = msgContent.intervaloMin ?? 40
+        const intervaloMax = msgContent.intervaloMax ?? 60
         const baseTime = sendNow
           ? new Date().toISOString()
           : msgContent.agendadoPara
             ? new Date(msgContent.agendadoPara as string).toISOString()
             : new Date().toISOString()
-        const result = await dispararCampanha(campanha.id, {
-          mensagem: (msgContent.mensagem as string) || '',
-          imageUrl,
-          imageMimetype,
-          mentionAll: !!(msgContent.mentionAll),
-          agendadoPara: baseTime,
-          groupIds: wizardGroupsMode === 'especificos' ? groupIds : undefined,
-          intervaloMin: (msgContent.intervaloMin as number | undefined) ?? 40,
-          intervaloMax: (msgContent.intervaloMax as number | undefined) ?? 60,
-        })
+        // Build list of blocks to send (saved + current unsaved if non-empty)
+        const savedBlocos = msgContent.blocos ?? []
+        const currentBloco = { mensagem: msgContent.mensagem ?? '', imageFile: msgContent.imageFile }
+        const allBlocos = savedBlocos.length > 0
+          ? (currentBloco.mensagem.trim() || currentBloco.imageFile ? [...savedBlocos, currentBloco] : savedBlocos)
+          : [currentBloco]
+        let totalItens = 0
+        let blockBaseTime = baseTime
+        for (const bloco of allBlocos) {
+          let imageUrl = ''
+          let imageMimetype = ''
+          if (bloco.imageFile) {
+            imageUrl = await uploadImage(bloco.imageFile)
+            imageMimetype = bloco.imageFile.type
+          }
+          const result = await dispararCampanha(campanha.id, {
+            mensagem: bloco.mensagem || '',
+            imageUrl,
+            imageMimetype,
+            mentionAll: !!(msgContent.mentionAll),
+            agendadoPara: blockBaseTime,
+            groupIds: wizardGroupsMode === 'especificos' ? groupIds : undefined,
+            intervaloMin,
+            intervaloMax,
+          })
+          totalItens += result.itens
+          // Stagger next block to start after this one finishes
+          blockBaseTime = new Date(new Date(blockBaseTime).getTime() + groupIds.length * intervaloMax * 1100).toISOString()
+        }
         // Reset content and go back to conteudo step for next dispatch
         setWizardContent({})
         setImagePreview(null)
-        setWizardLastSuccess(`Disparo criado! ${result.itens} grupos agendados.`)
+        setWizardLastSuccess(`Disparo criado! ${totalItens} grupos agendados (${allBlocos.length} bloco${allBlocos.length > 1 ? 's' : ''}).`)
         setWizardStep('conteudo')
       } else {
         const result = await executeGroupAction({
@@ -438,7 +453,9 @@ export default function CampanhaDetalhe() {
     if (wizardStep === 'grupos') return wizardGroupsMode === 'todos' || wizardGroupIds.length > 0
     if (wizardStep === 'conteudo') {
       if (wizardAction === 'enviar-mensagem') {
-        return !!((wizardContent as { mensagem?: string }).mensagem?.trim())
+        const hasCurrent = !!((wizardContent as { mensagem?: string }).mensagem?.trim())
+        const hasBlocos = ((wizardContent as { blocos?: unknown[] }).blocos?.length ?? 0) > 0
+        return hasCurrent || hasBlocos
       }
       if (wizardAction === 'trocar-nome' || wizardAction === 'trocar-descricao') {
         return !!((wizardContent as { value?: string }).value?.trim())
@@ -1008,6 +1025,7 @@ export default function CampanhaDetalhe() {
                 const msg = (wizardContent as { mensagem?: string }).mensagem ?? ''
                 const mentionAll = (wizardContent as { mentionAll?: boolean }).mentionAll ?? false
                 const curMin = (wizardContent as { intervaloMin?: number }).intervaloMin ?? 40
+                const blocos = (wizardContent as { blocos?: Array<{ mensagem: string; imagePreview?: string }> }).blocos ?? []
                 const now = new Date()
                 const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
                 const intervalOpts = [
@@ -1016,6 +1034,23 @@ export default function CampanhaDetalhe() {
                   { label: '60–120s', min: 60, max: 120, desc: 'Seguro' },
                 ] as const
                 const selectedOpt = intervalOpts.find(o => o.min === curMin) ?? intervalOpts[1]
+                const handleSalvarBloco = () => {
+                  if (!msg.trim() && !imagePreview) return
+                  setWizardContent(prev => {
+                    const prevBlocos = (prev as { blocos?: Array<{ mensagem: string; imageFile?: File; imagePreview?: string }> }).blocos ?? []
+                    return {
+                      ...prev,
+                      mensagem: '',
+                      imageFile: undefined,
+                      blocos: [...prevBlocos, {
+                        mensagem: msg,
+                        imageFile: (prev as { imageFile?: File }).imageFile,
+                        imagePreview: imagePreview ?? undefined,
+                      }],
+                    }
+                  })
+                  setImagePreview(null)
+                }
                 const iconPaths = [
                   { d: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', fn: undefined },
                   { d: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', fn: undefined },
@@ -1079,11 +1114,36 @@ export default function CampanhaDetalhe() {
 
                     {/* Center: Textarea */}
                     <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-                      <div className="flex justify-end">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted">
+                          {blocos.length > 0 ? `${blocos.length} bloco${blocos.length > 1 ? 's' : ''} salvo${blocos.length > 1 ? 's' : ''}` : ''}
+                        </span>
                         <button type="button" onClick={() => wizardFileRef.current?.click()} className="text-xs text-accent hover:text-accent/80 font-medium transition-colors">
-                          + Adicionar preview
+                          + Adicionar imagem
                         </button>
                       </div>
+                      {/* Saved blocks */}
+                      {blocos.length > 0 && (
+                        <div className="flex flex-col gap-1">
+                          {blocos.map((b, i) => (
+                            <div key={i} className="flex items-center gap-2 px-3 py-2 bg-surface-2 border border-border rounded-lg">
+                              <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-black flex-shrink-0" style={{ background: '#f5c518' }}>{i + 1}</span>
+                              {b.imagePreview && <img src={b.imagePreview} className="w-5 h-5 rounded object-cover flex-shrink-0" alt="" />}
+                              <span className="flex-1 text-xs text-secondary truncate">{b.mensagem || '(imagem)'}</span>
+                              <button
+                                type="button"
+                                onClick={() => setWizardContent(prev => ({
+                                  ...prev,
+                                  blocos: ((prev as { blocos?: unknown[] }).blocos ?? []).filter((_, idx) => idx !== i)
+                                }))}
+                                className="text-muted hover:text-red-400 transition-colors flex-shrink-0"
+                              >
+                                <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       <textarea
                         placeholder="Escreva a sua mensagem"
                         value={msg}
@@ -1101,11 +1161,12 @@ export default function CampanhaDetalhe() {
                           </button>
                           <button
                             type="button"
-                            onClick={nextStep}
-                            disabled={!msg.trim()}
+                            onClick={handleSalvarBloco}
+                            disabled={!msg.trim() && !imagePreview}
                             className="flex items-center gap-1 text-xs font-semibold text-muted border border-border px-3 py-1.5 rounded-lg hover:text-white hover:border-border-2 transition-colors disabled:opacity-30"
+                            title="Salvar como bloco e adicionar outro"
                           >
-                            <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m-6-6l6 6-6 6" /></svg>
+                            <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
                             SALVAR
                           </button>
                         </div>
@@ -1408,23 +1469,31 @@ export default function CampanhaDetalhe() {
                     </div>
 
                     {/* Conteúdo preview (only for enviar-mensagem) */}
-                    {wizardAction === 'enviar-mensagem' && (
+                    {wizardAction === 'enviar-mensagem' && (() => {
+                      const confirmarBlocos = (wizardContent as { blocos?: Array<{ mensagem: string; imagePreview?: string }> }).blocos ?? []
+                      const allMsgs = confirmarBlocos.length > 0
+                        ? (msg.trim() ? [...confirmarBlocos, { mensagem: msg }] : confirmarBlocos)
+                        : [{ mensagem: msg }]
+                      return (
                       <div>
-                        <p className="text-xs text-muted uppercase tracking-wider mb-2">Conteúdo</p>
+                        <p className="text-xs text-muted uppercase tracking-wider mb-2">
+                          Conteúdo {allMsgs.length > 1 && <span className="normal-case font-normal">({allMsgs.length} blocos)</span>}
+                        </p>
                         <div className="border border-border rounded-xl overflow-hidden">
-                          <div className="px-3 py-3 min-h-24 flex flex-col justify-end" style={{ background: '#0b141a' }}>
-                            {msg ? (
-                              <div className="self-end max-w-[85%] rounded-xl rounded-tr-sm px-2.5 pt-2 pb-1.5 relative" style={{ background: '#005c4b' }}>
-                                {msg && <p className="text-white text-[11px] leading-[1.4] whitespace-pre-wrap break-words">{msg}</p>}
+                          <div className="px-3 py-3 flex flex-col gap-2" style={{ background: '#0b141a' }}>
+                            {allMsgs.length === 0 || (allMsgs.length === 1 && !allMsgs[0].mensagem) ? (
+                              <p className="text-[10px] text-center py-4" style={{ color: '#8696a0' }}>Sem mensagem</p>
+                            ) : allMsgs.map((b, i) => b.mensagem ? (
+                              <div key={i} className="self-end max-w-[85%] rounded-xl rounded-tr-sm px-2.5 pt-2 pb-1.5" style={{ background: '#005c4b' }}>
+                                {allMsgs.length > 1 && <span className="text-[9px] font-bold" style={{ color: '#f5c518' }}>#{i + 1}</span>}
+                                <p className="text-white text-[11px] leading-[1.4] whitespace-pre-wrap break-words">{b.mensagem}</p>
                                 {mentionAll && <p className="text-[10px] mt-0.5" style={{ color: '#53bdeb' }}>@todos</p>}
                                 <div className="flex items-center justify-end gap-1 mt-1">
                                   <span className="text-[9px]" style={{ color: '#8696a0' }}>{timeStr}</span>
                                   <svg width="14" height="8" viewBox="0 0 16 11" fill="none"><path d="M11 1L5.5 6.5L3 4" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M15 1L9.5 6.5L7 4" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                                 </div>
                               </div>
-                            ) : (
-                              <p className="text-[10px] text-center" style={{ color: '#8696a0' }}>Sem mensagem</p>
-                            )}
+                            ) : null)}
                           </div>
                           {/* Options */}
                           <div className="divide-y divide-border">
@@ -1448,7 +1517,8 @@ export default function CampanhaDetalhe() {
                           </div>
                         </div>
                       </div>
-                    )}
+                    )
+                    })()}
 
                     {/* Schedule datetime (shown when AGENDAR mode is on) */}
                     {wizardAction === 'enviar-mensagem' && wizardAgendarMode && (
