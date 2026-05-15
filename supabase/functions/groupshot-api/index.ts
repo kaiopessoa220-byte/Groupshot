@@ -374,9 +374,14 @@ serve(async (req: Request) => {
   const dispararMatch = path.match(/^\/campanhas\/([^/]+)\/disparar$/)
   if (req.method === 'POST' && dispararMatch) {
     const cId = dispararMatch[1]
-    let body: { nome?: string; mensagem: string; imageUrl?: string; imageMimetype?: string; mentionAll: boolean; agendadoPara: string; groupIds?: string[]; intervaloMin?: number; intervaloMax?: number }
+    let body: { nome?: string; mensagem?: string; mensagens?: Array<{ mensagem: string; imageUrl?: string; imageMimetype?: string }>; imageUrl?: string; imageMimetype?: string; mentionAll: boolean; agendadoPara: string; groupIds?: string[]; intervaloMin?: number; intervaloMax?: number }
     try { body = await req.json() } catch { return err('JSON inválido') }
-    if (!body.mensagem) return err('mensagem obrigatória')
+
+    // Build blocos array — supports single message (legacy) or multi-block
+    const blocos: Array<{ mensagem: string; imageUrl: string; imageMimetype: string }> = body.mensagens?.length
+      ? body.mensagens.map(b => ({ mensagem: b.mensagem, imageUrl: b.imageUrl ?? '', imageMimetype: b.imageMimetype ?? '' }))
+      : [{ mensagem: body.mensagem ?? '', imageUrl: body.imageUrl ?? '', imageMimetype: body.imageMimetype ?? '' }]
+    if (!blocos[0].mensagem) return err('mensagem obrigatória')
 
     const db = supabaseAdmin()
     const { data: campanha, error: cErr } = await db
@@ -388,12 +393,12 @@ serve(async (req: Request) => {
     if (!campanha.campanha_grupos?.length) return err('Campanha sem grupos')
     if (!campanha.instancias?.length) return err('Campanha sem instâncias')
 
-    const { mensagem, imageUrl, imageMimetype, mentionAll, agendadoPara } = body
+    const { mentionAll, agendadoPara } = body
     const baseTime = new Date(agendadoPara).getTime()
     const intervaloMin = (body.intervaloMin ?? 40) * 1000
     const intervaloMax = (body.intervaloMax ?? 60) * 1000
+    const MSG_GAP = 4000 // 4s between blocks for the same group
 
-    // Filter groups if specific groupIds provided
     const targetGroups = body.groupIds?.length
       ? campanha.campanha_grupos.filter((g: { group_id: string }) => body.groupIds!.includes(g.group_id))
       : campanha.campanha_grupos
@@ -402,9 +407,9 @@ serve(async (req: Request) => {
       .from('disparos')
       .insert({
         nome: body.nome || campanha.nome,
-        mensagem,
-        image_url: imageUrl ?? '',
-        image_mimetype: imageMimetype ?? '',
+        mensagem: blocos[0].mensagem,
+        image_url: blocos[0].imageUrl,
+        image_mimetype: blocos[0].imageMimetype,
         mention_all: mentionAll,
         agendado_para: new Date(baseTime).toISOString(),
         status: 'agendado',
@@ -415,26 +420,37 @@ serve(async (req: Request) => {
       .single()
     if (dErr || !disparo) return err('Erro ao salvar: ' + dErr?.message, 500)
 
-    let acumulado = 0
-    const itens = targetGroups.map((g: { group_id: string; group_name: string; instancia: string }, i: number) => {
-      if (i > 0) acumulado += intervaloMin + Math.floor(Math.random() * (intervaloMax - intervaloMin + 1))
+    // Build items: for each group, one item per block with proper staggering
+    // Map send_at -> bloco index so we can match after DB insert (no extra column needed)
+    let groupAccumulado = 0
+    const sendAtToBlocoIndex = new Map<string, number>()
+    const itens: Array<{ disparo_id: string; group_id: string; group_name: string; instancia: string; send_at: string; status: string }> = []
+    for (let gi = 0; gi < targetGroups.length; gi++) {
+      const g = targetGroups[gi]
+      if (gi > 0) groupAccumulado += intervaloMin + Math.floor(Math.random() * (intervaloMax - intervaloMin + 1))
       const instancia = campanha.instancias[Math.floor(Math.random() * campanha.instancias.length)]
-      return { disparo_id: disparo.id, group_id: g.group_id, group_name: g.group_name, instancia, send_at: new Date(baseTime + acumulado).toISOString(), status: 'pendente' }
-    })
+      for (let bi = 0; bi < blocos.length; bi++) {
+        const sendAt = new Date(baseTime + groupAccumulado + bi * MSG_GAP).toISOString()
+        sendAtToBlocoIndex.set(`${g.group_id}|${sendAt}`, bi)
+        itens.push({ disparo_id: disparo.id, group_id: g.group_id, group_name: g.group_name, instancia, send_at: sendAt, status: 'pendente' })
+      }
+    }
 
     const { data: insertedItens, error: iErr } = await db.from('disparo_itens').insert(itens).select()
     if (iErr || !insertedItens) return err('Erro ao salvar itens: ' + iErr?.message, 500)
 
     if (N8N_DISPATCHER) {
       for (const item of insertedItens) {
+        const bi = sendAtToBlocoIndex.get(`${item.group_id}|${item.send_at}`) ?? 0
+        const bloco = blocos[bi]
         fetch(N8N_DISPATCHER, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ groupId: item.group_id, instancia: item.instancia, sendAt: item.send_at, message: mensagem, imageUrl: imageUrl ?? '', imageMimetype: imageMimetype ?? 'image/jpeg', mentionAll, disparoItemId: item.id }),
+          body: JSON.stringify({ groupId: item.group_id, instancia: item.instancia, sendAt: item.send_at, message: bloco.mensagem, imageUrl: bloco.imageUrl, imageMimetype: bloco.imageMimetype || 'image/jpeg', mentionAll, disparoItemId: item.id }),
         }).catch(() => {})
       }
     }
-    return json({ id: disparo.id, itens: itens.length }, 201)
+    return json({ id: disparo.id, itens: targetGroups.length }, 201)
   }
 
   // POST /group/create-batch

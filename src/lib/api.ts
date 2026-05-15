@@ -210,6 +210,7 @@ export async function fetchAtividades(campanhaId: string): Promise<Disparo[]> {
 export interface DispararCampanhaPayload {
   nome?: string
   mensagem: string
+  mensagens?: Array<{ mensagem: string; imageUrl?: string; imageMimetype?: string }>
   imageUrl?: string
   imageMimetype?: string
   mentionAll: boolean

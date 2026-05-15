@@ -355,46 +355,42 @@ export default function CampanhaDetalhe() {
 
       if (wizardAction === 'enviar-mensagem') {
         const msgContent = wizardContent as { mensagem?: string; mentionAll?: boolean; agendadoPara?: string; imageFile?: File; intervaloMin?: number; intervaloMax?: number; blocos?: Array<{ mensagem: string; imageFile?: File }> }
-        const intervaloMin = msgContent.intervaloMin ?? 40
-        const intervaloMax = msgContent.intervaloMax ?? 60
         const baseTime = sendNow
           ? new Date().toISOString()
           : msgContent.agendadoPara
             ? new Date(msgContent.agendadoPara as string).toISOString()
             : new Date().toISOString()
-        // Build list of blocks to send (saved + current unsaved if non-empty)
+        // Build final list of blocks (saved + current unsaved if non-empty)
         const savedBlocos = msgContent.blocos ?? []
         const currentBloco = { mensagem: msgContent.mensagem ?? '', imageFile: msgContent.imageFile }
         const allBlocos = savedBlocos.length > 0
           ? (currentBloco.mensagem.trim() || currentBloco.imageFile ? [...savedBlocos, currentBloco] : savedBlocos)
           : [currentBloco]
-        let totalItens = 0
-        let blockBaseTime = baseTime
-        for (const bloco of allBlocos) {
+        // Upload images and build mensagens payload
+        const mensagens = await Promise.all(allBlocos.map(async bloco => {
           let imageUrl = ''
           let imageMimetype = ''
           if (bloco.imageFile) {
             imageUrl = await uploadImage(bloco.imageFile)
             imageMimetype = bloco.imageFile.type
           }
-          const result = await dispararCampanha(campanha.id, {
-            mensagem: bloco.mensagem || '',
-            imageUrl,
-            imageMimetype,
-            mentionAll: !!(msgContent.mentionAll),
-            agendadoPara: blockBaseTime,
-            groupIds: wizardGroupsMode === 'especificos' ? groupIds : undefined,
-            intervaloMin,
-            intervaloMax,
-          })
-          totalItens += result.itens
-          // Stagger next block to start after this one finishes
-          blockBaseTime = new Date(new Date(blockBaseTime).getTime() + groupIds.length * intervaloMax * 1100).toISOString()
-        }
+          return { mensagem: bloco.mensagem || '', imageUrl, imageMimetype }
+        }))
+        const result = await dispararCampanha(campanha.id, {
+          mensagem: mensagens[0].mensagem,
+          mensagens: mensagens.length > 1 ? mensagens : undefined,
+          imageUrl: mensagens[0].imageUrl,
+          imageMimetype: mensagens[0].imageMimetype,
+          mentionAll: !!(msgContent.mentionAll),
+          agendadoPara: baseTime,
+          groupIds: wizardGroupsMode === 'especificos' ? groupIds : undefined,
+          intervaloMin: msgContent.intervaloMin ?? 40,
+          intervaloMax: msgContent.intervaloMax ?? 60,
+        })
         // Reset content and go back to conteudo step for next dispatch
         setWizardContent({})
         setImagePreview(null)
-        setWizardLastSuccess(`Disparo criado! ${totalItens} grupos agendados (${allBlocos.length} bloco${allBlocos.length > 1 ? 's' : ''}).`)
+        setWizardLastSuccess(`Disparo criado! ${result.itens} grupos agendados (${allBlocos.length} bloco${allBlocos.length > 1 ? 's' : ''}).`)
         setWizardStep('conteudo')
       } else {
         const result = await executeGroupAction({
