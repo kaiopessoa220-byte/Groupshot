@@ -177,6 +177,7 @@ export default function CampanhaDetalhe() {
   const [wizardRunning, setWizardRunning] = useState(false)
   const [wizardResult, setWizardResult] = useState<string | null>(null)
   const [wizardLastSuccess, setWizardLastSuccess] = useState<string | null>(null)
+  const [wizardAgendarMode, setWizardAgendarMode] = useState(false)
 
   // Instance profile pictures (for wizard contas step)
   const [instPics, setInstPics] = useState<Record<string, string | null>>({})
@@ -1006,7 +1007,6 @@ export default function CampanhaDetalhe() {
               {wizardAction === 'enviar-mensagem' && (() => {
                 const msg = (wizardContent as { mensagem?: string }).mensagem ?? ''
                 const mentionAll = (wizardContent as { mentionAll?: boolean }).mentionAll ?? false
-                const agendadoPara = (wizardContent as { agendadoPara?: string }).agendadoPara ?? ''
                 const curMin = (wizardContent as { intervaloMin?: number }).intervaloMin ?? 40
                 const now = new Date()
                 const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
@@ -1017,101 +1017,129 @@ export default function CampanhaDetalhe() {
                 ] as const
                 const selectedOpt = intervalOpts.find(o => o.min === curMin) ?? intervalOpts[1]
                 return (
-                  <div className="flex gap-4">
-                    {/* Left: WhatsApp Preview */}
-                    <div className="w-56 flex-shrink-0">
-                      <p className="text-xs text-muted uppercase tracking-wider mb-2">Pré-visualização</p>
-                      <div className="rounded-2xl overflow-hidden border border-border" style={{ background: '#111b21' }}>
-                        <div className="flex items-center gap-2.5 px-3 py-2.5" style={{ background: '#202c33' }}>
-                          <div className="w-8 h-8 rounded-full bg-accent/20 border border-accent/20 flex items-center justify-center flex-shrink-0 text-accent font-bold text-xs">
-                            {campanha.nome.slice(0, 2).toUpperCase()}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-semibold text-white truncate">{campanha.nome}</p>
-                            <p className="text-[10px]" style={{ color: '#8696a0' }}>{campanha.campanha_grupos.length} participantes</p>
-                          </div>
+                  <div className="flex gap-0 min-h-0">
+                    {/* Left: Editor de mensagens */}
+                    <div className="flex-1 min-w-0 border border-border rounded-l-xl overflow-hidden flex flex-col" style={{ borderRight: 'none' }}>
+                      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border" style={{ background: '#202c33' }}>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => { setWizardContent(prev => ({ ...prev, mensagem: '', imageFile: undefined })); setImagePreview(null) }}
+                            title="Limpar"
+                            className="text-muted hover:text-white transition-colors"
+                          >
+                            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          </button>
+                          <span className="text-xs font-medium text-secondary">Editor de mensagens</span>
                         </div>
-                        <div className="px-3 py-4 min-h-40 flex flex-col justify-end gap-1" style={{ background: '#0b141a' }}>
-                          {(msg || imagePreview) ? (
-                            <div className="self-end max-w-[90%] rounded-xl rounded-tr-sm px-2.5 pt-2 pb-1.5 relative" style={{ background: '#005c4b' }}>
-                              {imagePreview && <img src={imagePreview} alt="" className="rounded-lg mb-1.5 w-full object-cover max-h-28" />}
-                              {msg && <p className="text-white text-[11px] leading-[1.4] whitespace-pre-wrap break-words">{msg}</p>}
-                              {mentionAll && <p className="text-[10px] mt-0.5" style={{ color: '#53bdeb' }}>@todos</p>}
-                              <div className="flex items-center justify-end gap-1 mt-1">
-                                <span className="text-[9px]" style={{ color: '#8696a0' }}>{timeStr}</span>
-                                <svg width="14" height="8" viewBox="0 0 16 11" fill="none">
-                                  <path d="M11 1L5.5 6.5L3 4" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                  <path d="M15 1L9.5 6.5L7 4" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                </svg>
-                              </div>
+                        <button type="button" onClick={() => wizardFileRef.current?.click()} className="text-xs text-accent hover:text-accent/80 transition-colors font-medium">
+                          + Adicionar imagem
+                        </button>
+                        <input ref={wizardFileRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) { setWizardContent(prev => ({ ...prev, imageFile: f })); setImagePreview(URL.createObjectURL(f)) } }} />
+                      </div>
+                      {/* Chat preview body */}
+                      <div className="flex-1 min-h-48 flex flex-col justify-end p-3" style={{ background: '#0b141a' }}>
+                        {(msg || imagePreview) ? (
+                          <div className="self-end max-w-[80%] rounded-xl rounded-tr-sm px-2.5 pt-2 pb-1.5 relative" style={{ background: '#005c4b' }}>
+                            {imagePreview && <img src={imagePreview} alt="" className="rounded-lg mb-1.5 w-full object-cover max-h-28" />}
+                            {msg && <p className="text-white text-[11px] leading-[1.4] whitespace-pre-wrap break-words">{msg}</p>}
+                            {mentionAll && <p className="text-[10px] mt-0.5" style={{ color: '#53bdeb' }}>@todos</p>}
+                            <div className="flex items-center justify-end gap-1 mt-1">
+                              <span className="text-[9px]" style={{ color: '#8696a0' }}>{timeStr}</span>
+                              <svg width="14" height="8" viewBox="0 0 16 11" fill="none"><path d="M11 1L5.5 6.5L3 4" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M15 1L9.5 6.5L7 4" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                             </div>
-                          ) : (
-                            <div className="text-center py-4">
-                              <p className="text-[10px]" style={{ color: '#8696a0' }}>Digite uma mensagem para ver o preview</p>
-                            </div>
-                          )}
+                          </div>
+                        ) : (
+                          <div className="text-center py-6">
+                            <p className="text-[10px]" style={{ color: '#8696a0' }}>Digite uma mensagem para ver o preview</p>
+                          </div>
+                        )}
+                      </div>
+                      {/* Bottom action bar */}
+                      <div className="border-t border-border px-3 py-2 flex flex-col gap-1.5" style={{ background: '#202c33' }}>
+                        <div className="flex items-center gap-3">
+                          {[
+                            <path key="p1" strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />,
+                            <path key="p2" strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />,
+                            <path key="p3" strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />,
+                          ].map((path, i) => (
+                            <button key={i} type="button" className="text-muted hover:text-white transition-colors">
+                              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">{path}</svg>
+                            </button>
+                          ))}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <button type="button" className="text-muted hover:text-white transition-colors">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                          </button>
+                          <button type="button" className="text-muted hover:text-white transition-colors">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                          </button>
+                          <button type="button" onClick={() => wizardFileRef.current?.click()} className="text-accent hover:text-accent/80 transition-colors" title="Enviar imagem">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                          </button>
+                          <button type="button" className="text-muted hover:text-white transition-colors">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                          </button>
+                          <button type="button" className="text-muted hover:text-white transition-colors">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                          </button>
+                          <button type="button" className="text-muted hover:text-white transition-colors">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                          </button>
                         </div>
                       </div>
                     </div>
 
-                    {/* Center: Editor */}
-                    <div className="flex-1 min-w-0 space-y-4">
-                      <div>
-                        <label className="block text-xs text-muted uppercase tracking-wider mb-2">Mensagem</label>
-                        <textarea
-                          placeholder="Digite a mensagem..."
-                          value={msg}
-                          onChange={e => setWizardContent(prev => ({ ...prev, mensagem: e.target.value }))}
-                          rows={6}
-                          className="input resize-none"
-                        />
-                        <p className="text-xs text-muted mt-1">{msg.length} caracteres</p>
-                      </div>
-                      <div>
-                        <label className="block text-xs text-muted uppercase tracking-wider mb-2">Imagem <span className="normal-case">(opcional)</span></label>
-                        <div
-                          onClick={() => wizardFileRef.current?.click()}
-                          onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f?.type.startsWith('image/')) { setWizardContent(prev => ({ ...prev, imageFile: f })); setImagePreview(URL.createObjectURL(f)) } }}
-                          onDragOver={e => e.preventDefault()}
-                          className="border border-dashed border-border rounded-xl p-4 text-center cursor-pointer hover:border-border-2 transition-colors"
-                        >
-                          {imagePreview ? (
-                            <div className="relative inline-block">
-                              <img src={imagePreview} alt="preview" className="max-h-24 rounded-lg mx-auto" />
-                              <button onClick={e => { e.stopPropagation(); setWizardContent(prev => ({ ...prev, imageFile: undefined })); setImagePreview(null) }} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">×</button>
-                            </div>
-                          ) : (
-                            <div>
-                              <svg width="18" height="18" fill="none" stroke="#71717a" strokeWidth="1.5" viewBox="0 0 24 24" className="mx-auto mb-1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                              <p className="text-xs text-muted">Arraste ou clique para selecionar</p>
-                            </div>
-                          )}
+                    {/* Center: Textarea */}
+                    <div className="w-80 flex-shrink-0 border border-border flex flex-col" style={{ borderLeft: 'none', borderRight: 'none' }}>
+                      <textarea
+                        placeholder="Escreva a sua mensagem"
+                        value={msg}
+                        onChange={e => setWizardContent(prev => ({ ...prev, mensagem: e.target.value }))}
+                        className="flex-1 bg-transparent px-4 py-3 text-sm text-white placeholder-muted resize-none outline-none min-h-[200px]"
+                      />
+                      <div className="flex items-center justify-between px-3 py-2 border-t border-border" style={{ background: '#202c33' }}>
+                        <button type="button" className="text-muted hover:text-white transition-colors">
+                          <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        </button>
+                        <div className="flex items-center gap-2">
+                          <button type="button" className="text-xs font-semibold text-muted border border-border px-3 py-1.5 rounded-lg hover:text-white hover:border-border-2 transition-colors">MODELOS</button>
+                          <button
+                            type="button"
+                            onClick={nextStep}
+                            disabled={!msg.trim()}
+                            className="flex items-center gap-1 text-xs font-semibold text-muted border border-border px-3 py-1.5 rounded-lg hover:text-white hover:border-border-2 transition-colors disabled:opacity-30"
+                          >
+                            SALVAR
+                            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                          </button>
                         </div>
-                        <input ref={wizardFileRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) { setWizardContent(prev => ({ ...prev, imageFile: f })); setImagePreview(URL.createObjectURL(f)) } }} />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-muted uppercase tracking-wider mb-2">Agendar para <span className="normal-case">(BRT — UTC-3)</span></label>
-                        <input type="datetime-local" value={agendadoPara} onChange={e => setWizardContent(prev => ({ ...prev, agendadoPara: e.target.value }))} className="input w-auto" />
                       </div>
                     </div>
 
                     {/* Right: Options sidebar */}
-                    <div className="w-52 flex-shrink-0 border border-border rounded-xl overflow-hidden self-start">
-                      {/* Mencionar todos */}
-                      <div className="flex items-center justify-between px-4 py-3.5 border-b border-border">
-                        <span className="text-sm text-secondary">Marcar todos</span>
-                        <div
-                          onClick={() => setWizardContent(prev => ({ ...prev, mentionAll: !mentionAll }))}
-                          className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 cursor-pointer ${mentionAll ? 'bg-accent' : 'bg-surface-2 border border-border'}`}
-                        >
-                          <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${mentionAll ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                    <div className="w-52 flex-shrink-0 border border-border rounded-r-xl overflow-hidden self-start" style={{ borderLeft: 'none' }}>
+                      <div
+                        className="flex items-center justify-between px-4 py-3.5 border-b border-border cursor-pointer hover:bg-surface-2 transition-colors"
+                        onClick={() => setWizardContent(prev => ({ ...prev, mentionAll: !mentionAll }))}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <svg width="12" height="12" fill="none" stroke="#71717a" strokeWidth="2" viewBox="0 0 24 24" className="flex-shrink-0"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                          <span className="text-sm text-secondary truncate">Marcar todos os participantes</span>
                         </div>
+                        <span className="text-xs text-muted ml-2 flex-shrink-0">{mentionAll ? 'Sim' : 'Não'}</span>
                       </div>
-                      {/* Velocidade de envio */}
                       <div className="px-4 py-3.5">
                         <div className="flex items-center justify-between mb-3">
-                          <span className="text-sm text-secondary">Velocidade</span>
-                          <span className="text-xs text-muted">{selectedOpt.desc}</span>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <svg width="12" height="12" fill="none" stroke="#71717a" strokeWidth="2" viewBox="0 0 24 24" className="flex-shrink-0"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                            <span className="text-sm text-secondary truncate">Velocidade de envio</span>
+                          </div>
+                          <div className="text-right ml-2 flex-shrink-0">
+                            <p className="text-xs text-muted leading-none">{selectedOpt.desc}</p>
+                            <p className="text-xs text-muted leading-none mt-0.5">{selectedOpt.label}</p>
+                          </div>
                         </div>
                         <div className="flex flex-col gap-1.5">
                           {intervalOpts.map(opt => {
@@ -1124,7 +1152,7 @@ export default function CampanhaDetalhe() {
                                 className={`flex items-center justify-between w-full px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${sel ? 'bg-accent text-black border-accent' : 'bg-surface-2 border-border text-muted hover:text-white hover:border-border-2'}`}
                               >
                                 <span>{opt.desc}</span>
-                                <span className={`${sel ? 'opacity-70' : 'opacity-50'}`}>{opt.label}</span>
+                                <span className={sel ? 'opacity-70' : 'opacity-50'}>{opt.label}</span>
                               </button>
                             )
                           })}
@@ -1278,66 +1306,200 @@ export default function CampanhaDetalhe() {
           )}
 
           {/* Step: Confirmar */}
-          {wizardStep === 'confirmar' && !wizardResult && (
-            <div className="space-y-4">
-              <p className="text-xs text-muted uppercase tracking-wider mb-3">Resumo</p>
+          {wizardStep === 'confirmar' && !wizardResult && (() => {
+            const msg = (wizardContent as { mensagem?: string }).mensagem ?? ''
+            const mentionAll = (wizardContent as { mentionAll?: boolean }).mentionAll ?? false
+            const agendadoPara = (wizardContent as { agendadoPara?: string }).agendadoPara ?? ''
+            const curMin = (wizardContent as { intervaloMin?: number }).intervaloMin ?? 40
+            const intervalOpts = [
+              { label: '10–20s', min: 10, max: 20, desc: 'Rápido' },
+              { label: '40–60s', min: 40, max: 60, desc: 'Padrão' },
+              { label: '60–120s', min: 60, max: 120, desc: 'Seguro' },
+            ] as const
+            const selectedOpt = intervalOpts.find(o => o.min === curMin) ?? intervalOpts[1]
+            const now = new Date()
+            const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+            return (
+              <div>
+                <div className="flex gap-5">
+                  {/* Left: Summary */}
+                  <div className="flex-1 min-w-0 space-y-4">
+                    {/* Campanhas */}
+                    <div>
+                      <p className="text-xs text-muted uppercase tracking-wider mb-2">Campanhas</p>
+                      <div className="bg-card border border-border rounded-xl px-4 py-3 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-accent/20 border border-accent/20 flex items-center justify-center">
+                          {campanha.foto_url
+                            ? <img src={campanha.foto_url} alt="" className="w-full h-full object-cover" />
+                            : <span className="text-accent font-bold text-xs">{campanha.nome.slice(0,2).toUpperCase()}</span>
+                          }
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-white truncate">{campanha.nome}</p>
+                          {campanha.descricao && <p className="text-xs text-muted truncate">{campanha.descricao}</p>}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Contas */}
+                    <div>
+                      <p className="text-xs text-muted uppercase tracking-wider mb-2">Contas</p>
+                      <div className="space-y-2">
+                        {wizardAccounts.map(acc => (
+                          <div key={acc} className="bg-card border border-border rounded-xl px-4 py-3 flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-surface-2 border border-border flex items-center justify-center">
+                              {instPics[acc]
+                                ? <img src={instPics[acc]!} alt="" className="w-full h-full object-cover" />
+                                : <span className="text-white font-bold text-xs">{acc.slice(0,2).toUpperCase()}</span>
+                              }
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-white truncate">{acc}</p>
+                              <div className="flex items-center gap-1 mt-0.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
+                                <span className="text-xs text-muted">Conectado</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Grupos da campanha */}
+                    <div>
+                      <p className="text-xs text-muted uppercase tracking-wider mb-2">Grupos da campanha</p>
+                      <div className="bg-card border border-border rounded-xl px-4 py-3 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-accent/20 border border-accent/20 flex items-center justify-center">
+                          {campanha.foto_url
+                            ? <img src={campanha.foto_url} alt="" className="w-full h-full object-cover" />
+                            : <span className="text-accent font-bold text-xs">{campanha.nome.slice(0,2).toUpperCase()}</span>
+                          }
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-white truncate">{campanha.nome}</p>
+                          <p className="text-xs text-muted">
+                            {wizardGroupsMode === 'todos'
+                              ? `Todos os grupos (${campanha.campanha_grupos.length})`
+                              : `${wizardGroupIds.length} grupos selecionados`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-              <div className="bg-card border border-border rounded-xl divide-y divide-border">
-                <div className="px-5 py-3 flex justify-between">
-                  <span className="text-xs text-muted">Ação</span>
-                  <span className="text-sm text-white font-medium">
-                    {ACTIONS.find(a => a.key === wizardAction)?.label}
-                  </span>
+                  {/* Right: Action + Content + Options */}
+                  <div className="w-80 flex-shrink-0 space-y-3">
+                    {/* Ação header */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs text-muted uppercase tracking-wider">Ação</p>
+                        <div className="flex items-center gap-2">
+                          <button type="button" onClick={() => setWizardStep('acao')} className="text-muted hover:text-white transition-colors" title="Alterar ação">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                          </button>
+                          {wizardAction === 'enviar-mensagem' && (
+                            <button
+                              type="button"
+                              onClick={() => setWizardAgendarMode(m => !m)}
+                              className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors ${wizardAgendarMode ? 'bg-accent text-black border-accent' : 'border-border text-muted hover:text-white hover:border-border-2'}`}
+                            >
+                              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                              AGENDAR
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <div className="bg-card border border-border rounded-xl px-4 py-3 flex items-center gap-2">
+                        <svg width="14" height="14" fill="none" stroke="#f5c518" strokeWidth="2" viewBox="0 0 24 24" className="flex-shrink-0"><path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                        <span className="text-sm text-white">{ACTIONS.find(a => a.key === wizardAction)?.label}</span>
+                      </div>
+                    </div>
+
+                    {/* Conteúdo preview (only for enviar-mensagem) */}
+                    {wizardAction === 'enviar-mensagem' && (
+                      <div>
+                        <p className="text-xs text-muted uppercase tracking-wider mb-2">Conteúdo</p>
+                        <div className="border border-border rounded-xl overflow-hidden">
+                          <div className="px-3 py-3 min-h-24 flex flex-col justify-end" style={{ background: '#0b141a' }}>
+                            {msg ? (
+                              <div className="self-end max-w-[85%] rounded-xl rounded-tr-sm px-2.5 pt-2 pb-1.5 relative" style={{ background: '#005c4b' }}>
+                                {msg && <p className="text-white text-[11px] leading-[1.4] whitespace-pre-wrap break-words">{msg}</p>}
+                                {mentionAll && <p className="text-[10px] mt-0.5" style={{ color: '#53bdeb' }}>@todos</p>}
+                                <div className="flex items-center justify-end gap-1 mt-1">
+                                  <span className="text-[9px]" style={{ color: '#8696a0' }}>{timeStr}</span>
+                                  <svg width="14" height="8" viewBox="0 0 16 11" fill="none"><path d="M11 1L5.5 6.5L3 4" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M15 1L9.5 6.5L7 4" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-[10px] text-center" style={{ color: '#8696a0' }}>Sem mensagem</p>
+                            )}
+                          </div>
+                          {/* Options */}
+                          <div className="divide-y divide-border">
+                            <div className="flex items-center justify-between px-4 py-2.5">
+                              <div className="flex items-center gap-2">
+                                <svg width="10" height="10" fill="none" stroke="#71717a" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                                <span className="text-xs text-secondary">Marcar todos os participantes</span>
+                              </div>
+                              <span className="text-xs text-muted">{mentionAll ? 'Sim' : 'Não'}</span>
+                            </div>
+                            <div className="flex items-center justify-between px-4 py-2.5">
+                              <div className="flex items-center gap-2">
+                                <svg width="10" height="10" fill="none" stroke="#71717a" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                                <span className="text-xs text-secondary">Velocidade de envio</span>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-xs text-muted leading-none">{selectedOpt.desc}</p>
+                                <p className="text-xs text-muted leading-none mt-0.5">{selectedOpt.label}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Schedule datetime (shown when AGENDAR mode is on) */}
+                    {wizardAction === 'enviar-mensagem' && wizardAgendarMode && (
+                      <div>
+                        <label className="block text-xs text-muted uppercase tracking-wider mb-2">Agendar para <span className="normal-case">(BRT — UTC-3)</span></label>
+                        <input
+                          type="datetime-local"
+                          value={agendadoPara}
+                          onChange={e => setWizardContent(prev => ({ ...prev, agendadoPara: e.target.value }))}
+                          className="input w-full"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="px-5 py-3 flex justify-between">
-                  <span className="text-xs text-muted">Contas</span>
-                  <span className="text-sm text-white font-medium">{wizardAccounts.join(', ')}</span>
-                </div>
-                <div className="px-5 py-3 flex justify-between">
-                  <span className="text-xs text-muted">Grupos</span>
-                  <span className="text-sm text-white font-medium">
-                    {wizardGroupsMode === 'todos'
-                      ? `Todos (${campanha.campanha_grupos.length})`
-                      : `${wizardGroupIds.length} selecionados`}
-                  </span>
-                </div>
+
+                {/* Bottom send button */}
+                {wizardRunning && (
+                  <div className="flex items-center gap-2 text-muted text-sm mt-4">
+                    <div className="w-4 h-4 border-2 border-border border-t-accent rounded-full animate-spin" />
+                    {wizardAgendarMode ? 'Agendando...' : 'Enviando...'}
+                  </div>
+                )}
+                {wizardAction === 'enviar-mensagem' ? (
+                  <button
+                    onClick={() => handleWizardExecute(!wizardAgendarMode)}
+                    disabled={wizardRunning || (wizardAgendarMode && !agendadoPara)}
+                    className="w-full mt-5 py-3.5 rounded-xl font-bold text-sm tracking-widest transition-colors disabled:opacity-40"
+                    style={{ background: '#f5c518', color: '#000' }}
+                  >
+                    {wizardRunning ? '...' : wizardAgendarMode ? 'AGENDAR' : 'ENVIAR AGORA'}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleWizardExecute()}
+                    disabled={wizardRunning}
+                    className="w-full mt-5 py-3.5 rounded-xl font-bold text-sm tracking-widest transition-colors disabled:opacity-40"
+                    style={{ background: '#f5c518', color: '#000' }}
+                  >
+                    {wizardRunning ? '...' : 'EXECUTAR'}
+                  </button>
+                )}
               </div>
-
-              {wizardRunning && (
-                <div className="flex items-center gap-2 text-muted text-sm py-2">
-                  <div className="w-4 h-4 border-2 border-border border-t-accent rounded-full animate-spin" />
-                  Executando...
-                </div>
-              )}
-
-              {wizardAction === 'enviar-mensagem' ? (
-                <div className="flex gap-3 pt-1">
-                  <button
-                    onClick={() => handleWizardExecute(true)}
-                    disabled={wizardRunning}
-                    className="flex-1 py-2.5 rounded-lg bg-green-500 hover:bg-green-400 disabled:opacity-40 text-black font-semibold text-sm transition-colors"
-                  >
-                    {wizardRunning ? 'Enviando...' : 'Enviar Agora'}
-                  </button>
-                  <button
-                    onClick={() => handleWizardExecute(false)}
-                    disabled={wizardRunning}
-                    className="btn-primary flex-1 py-2.5"
-                  >
-                    {wizardRunning ? 'Agendando...' : 'Agendar'}
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => handleWizardExecute()}
-                  disabled={wizardRunning}
-                  className="btn-primary w-full py-2.5"
-                >
-                  {wizardRunning ? 'Executando...' : 'Executar'}
-                </button>
-              )}
-            </div>
-          )}
+            )
+          })()}
 
           {/* Wizard Navigation */}
           {!wizardResult && (
