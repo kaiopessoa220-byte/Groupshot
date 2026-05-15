@@ -1077,21 +1077,44 @@ export default function CampanhaDetalhe() {
                         <input ref={wizardFileRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) { setWizardContent(prev => ({ ...prev, imageFile: f })); setImagePreview(URL.createObjectURL(f)) } }} />
                       </div>
                       {/* Chat preview body */}
-                      <div className="min-h-44 flex flex-col justify-end p-3" style={{ background: '#111b21', backgroundImage: 'radial-gradient(circle, #1f2c34 1px, transparent 1px)', backgroundSize: '18px 18px' }}>
-                        {(msg || imagePreview) ? (
-                          <div className="self-end max-w-[85%] rounded-xl rounded-tr-sm px-2.5 pt-2 pb-1.5" style={{ background: '#005c4b' }}>
-                            {imagePreview && <img src={imagePreview} alt="" className="rounded-lg mb-1.5 w-full object-cover max-h-24" />}
-                            {msg && <p className="text-white text-[11px] leading-[1.4] whitespace-pre-wrap break-words">{msg}</p>}
-                            {mentionAll && <p className="text-[10px] mt-0.5" style={{ color: '#53bdeb' }}>@todos</p>}
-                            <div className="flex items-center justify-end gap-1 mt-1">
-                              <span className="text-[9px]" style={{ color: '#8696a0' }}>{timeStr}</span>
-                              <svg width="14" height="8" viewBox="0 0 16 11" fill="none"><path d="M11 1L5.5 6.5L3 4" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M15 1L9.5 6.5L7 4" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                            </div>
-                          </div>
-                        ) : (
+                      <div className="min-h-44 flex flex-col justify-end gap-1.5 p-3 overflow-y-auto max-h-64" style={{ background: '#111b21', backgroundImage: 'radial-gradient(circle, #1f2c34 1px, transparent 1px)', backgroundSize: '18px 18px' }}>
+                        {blocos.length === 0 && !msg && !imagePreview ? (
                           <div className="text-center py-4">
                             <p className="text-[10px]" style={{ color: '#8696a0' }}>Digite uma mensagem para ver o preview</p>
                           </div>
+                        ) : (
+                          <>
+                            {blocos.map((b, i) => (
+                              <div key={i} className="self-end max-w-[85%] rounded-xl rounded-tr-sm px-2.5 pt-2 pb-1.5 group relative" style={{ background: '#005c4b' }}>
+                                {b.imagePreview && <img src={b.imagePreview} alt="" className="rounded-lg mb-1.5 w-full object-cover max-h-24" />}
+                                {b.mensagem && <p className="text-white text-[11px] leading-[1.4] whitespace-pre-wrap break-words">{b.mensagem}</p>}
+                                {mentionAll && <p className="text-[10px] mt-0.5" style={{ color: '#53bdeb' }}>@todos</p>}
+                                <div className="flex items-center justify-end gap-1 mt-1">
+                                  <span className="text-[9px]" style={{ color: '#8696a0' }}>{timeStr}</span>
+                                  <svg width="14" height="8" viewBox="0 0 16 11" fill="none"><path d="M11 1L5.5 6.5L3 4" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M15 1L9.5 6.5L7 4" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setWizardContent(prev => ({
+                                    ...prev,
+                                    blocos: ((prev as { blocos?: unknown[] }).blocos ?? []).filter((_, idx) => idx !== i)
+                                  }))}
+                                  className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white items-center justify-center text-[9px] font-bold hidden group-hover:flex"
+                                >×</button>
+                              </div>
+                            ))}
+                            {(msg || imagePreview) && (
+                              <div className="self-end max-w-[85%] rounded-xl rounded-tr-sm px-2.5 pt-2 pb-1.5" style={{ background: '#005c4b' }}>
+                                {imagePreview && <img src={imagePreview} alt="" className="rounded-lg mb-1.5 w-full object-cover max-h-24" />}
+                                {msg && <p className="text-white text-[11px] leading-[1.4] whitespace-pre-wrap break-words">{msg}</p>}
+                                {mentionAll && <p className="text-[10px] mt-0.5" style={{ color: '#53bdeb' }}>@todos</p>}
+                                <div className="flex items-center justify-end gap-1 mt-1">
+                                  <span className="text-[9px]" style={{ color: '#8696a0' }}>{timeStr}</span>
+                                  <svg width="14" height="8" viewBox="0 0 16 11" fill="none"><path d="M11 1L5.5 6.5L3 4" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M15 1L9.5 6.5L7 4" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                </div>
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                       {/* Icon bar */}
@@ -1114,36 +1137,11 @@ export default function CampanhaDetalhe() {
 
                     {/* Center: Textarea */}
                     <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted">
-                          {blocos.length > 0 ? `${blocos.length} bloco${blocos.length > 1 ? 's' : ''} salvo${blocos.length > 1 ? 's' : ''}` : ''}
-                        </span>
+                      <div className="flex justify-end">
                         <button type="button" onClick={() => wizardFileRef.current?.click()} className="text-xs text-accent hover:text-accent/80 font-medium transition-colors">
                           + Adicionar imagem
                         </button>
                       </div>
-                      {/* Saved blocks */}
-                      {blocos.length > 0 && (
-                        <div className="flex flex-col gap-1">
-                          {blocos.map((b, i) => (
-                            <div key={i} className="flex items-center gap-2 px-3 py-2 bg-surface-2 border border-border rounded-lg">
-                              <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-black flex-shrink-0" style={{ background: '#f5c518' }}>{i + 1}</span>
-                              {b.imagePreview && <img src={b.imagePreview} className="w-5 h-5 rounded object-cover flex-shrink-0" alt="" />}
-                              <span className="flex-1 text-xs text-secondary truncate">{b.mensagem || '(imagem)'}</span>
-                              <button
-                                type="button"
-                                onClick={() => setWizardContent(prev => ({
-                                  ...prev,
-                                  blocos: ((prev as { blocos?: unknown[] }).blocos ?? []).filter((_, idx) => idx !== i)
-                                }))}
-                                className="text-muted hover:text-red-400 transition-colors flex-shrink-0"
-                              >
-                                <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
                       <textarea
                         placeholder="Escreva a sua mensagem"
                         value={msg}
