@@ -1016,32 +1016,36 @@ export default function CampanhaDetalhe() {
                   { label: '60–120s', min: 60, max: 120, desc: 'Seguro' },
                 ] as const
                 const selectedOpt = intervalOpts.find(o => o.min === curMin) ?? intervalOpts[1]
+                const iconPaths = [
+                  { d: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', fn: undefined },
+                  { d: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', fn: undefined },
+                  { d: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z', fn: undefined },
+                  { d: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1', fn: undefined },
+                  { d: 'M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z', fn: undefined },
+                  { d: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z', fn: () => wizardFileRef.current?.click() },
+                  { d: 'M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z', fn: undefined },
+                ]
                 return (
-                  <div className="flex border border-border rounded-xl overflow-hidden min-h-0 divide-x divide-border">
+                  <div className="flex gap-4 items-start">
                     {/* Left: Editor de mensagens */}
-                    <div className="flex-1 min-w-0 flex flex-col">
-                      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border" style={{ background: '#202c33' }}>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => { setWizardContent(prev => ({ ...prev, mensagem: '', imageFile: undefined })); setImagePreview(null) }}
-                            title="Limpar"
-                            className="text-muted hover:text-white transition-colors"
-                          >
-                            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                          </button>
-                          <span className="text-xs font-medium text-secondary">Editor de mensagens</span>
-                        </div>
-                        <button type="button" onClick={() => wizardFileRef.current?.click()} className="text-xs text-accent hover:text-accent/80 transition-colors font-medium">
-                          + Adicionar imagem
+                    <div className="w-56 flex-shrink-0 rounded-xl overflow-hidden border border-border">
+                      <div className="flex items-center justify-between px-3 py-2.5" style={{ background: '#202c33' }}>
+                        <span className="text-xs font-medium text-secondary">Editor de mensagens</span>
+                        <button
+                          type="button"
+                          onClick={() => { setWizardContent(prev => ({ ...prev, mensagem: '', imageFile: undefined })); setImagePreview(null) }}
+                          title="Limpar"
+                          className="text-muted hover:text-white transition-colors"
+                        >
+                          <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                         </button>
                         <input ref={wizardFileRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) { setWizardContent(prev => ({ ...prev, imageFile: f })); setImagePreview(URL.createObjectURL(f)) } }} />
                       </div>
                       {/* Chat preview body */}
-                      <div className="flex-1 min-h-48 flex flex-col justify-end p-3" style={{ background: '#0b141a' }}>
+                      <div className="min-h-44 flex flex-col justify-end p-3" style={{ background: '#111b21', backgroundImage: 'radial-gradient(circle, #1f2c34 1px, transparent 1px)', backgroundSize: '18px 18px' }}>
                         {(msg || imagePreview) ? (
-                          <div className="self-end max-w-[80%] rounded-xl rounded-tr-sm px-2.5 pt-2 pb-1.5 relative" style={{ background: '#005c4b' }}>
-                            {imagePreview && <img src={imagePreview} alt="" className="rounded-lg mb-1.5 w-full object-cover max-h-28" />}
+                          <div className="self-end max-w-[85%] rounded-xl rounded-tr-sm px-2.5 pt-2 pb-1.5" style={{ background: '#005c4b' }}>
+                            {imagePreview && <img src={imagePreview} alt="" className="rounded-lg mb-1.5 w-full object-cover max-h-24" />}
                             {msg && <p className="text-white text-[11px] leading-[1.4] whitespace-pre-wrap break-words">{msg}</p>}
                             {mentionAll && <p className="text-[10px] mt-0.5" style={{ color: '#53bdeb' }}>@todos</p>}
                             <div className="flex items-center justify-end gap-1 mt-1">
@@ -1050,98 +1054,88 @@ export default function CampanhaDetalhe() {
                             </div>
                           </div>
                         ) : (
-                          <div className="text-center py-6">
+                          <div className="text-center py-4">
                             <p className="text-[10px]" style={{ color: '#8696a0' }}>Digite uma mensagem para ver o preview</p>
                           </div>
                         )}
                       </div>
-                      {/* Bottom action bar */}
-                      <div className="border-t border-border px-3 py-2 flex flex-col gap-1.5" style={{ background: '#202c33' }}>
-                        <div className="flex items-center gap-3">
-                          {[
-                            <path key="p1" strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />,
-                            <path key="p2" strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />,
-                            <path key="p3" strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />,
-                          ].map((path, i) => (
-                            <button key={i} type="button" className="text-muted hover:text-white transition-colors">
-                              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">{path}</svg>
-                            </button>
-                          ))}
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <button type="button" className="text-muted hover:text-white transition-colors">
-                            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                      {/* Icon bar */}
+                      <div className="px-3 py-2.5 flex flex-wrap gap-2" style={{ background: '#202c33' }}>
+                        {iconPaths.map((ic, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={ic.fn}
+                            className="w-7 h-7 rounded-full flex items-center justify-center transition-opacity hover:opacity-80"
+                            style={{ background: '#f5c518' }}
+                          >
+                            <svg width="13" height="13" fill="none" stroke="#000" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d={ic.d} />
+                            </svg>
                           </button>
-                          <button type="button" className="text-muted hover:text-white transition-colors">
-                            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
-                          </button>
-                          <button type="button" onClick={() => wizardFileRef.current?.click()} className="text-accent hover:text-accent/80 transition-colors" title="Enviar imagem">
-                            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                          </button>
-                          <button type="button" className="text-muted hover:text-white transition-colors">
-                            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                          </button>
-                          <button type="button" className="text-muted hover:text-white transition-colors">
-                            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                          </button>
-                          <button type="button" className="text-muted hover:text-white transition-colors">
-                            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-                          </button>
-                        </div>
+                        ))}
                       </div>
                     </div>
 
                     {/* Center: Textarea */}
-                    <div className="w-80 flex-shrink-0 flex flex-col">
+                    <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                      <div className="flex justify-end">
+                        <button type="button" onClick={() => wizardFileRef.current?.click()} className="text-xs text-accent hover:text-accent/80 font-medium transition-colors">
+                          + Adicionar preview
+                        </button>
+                      </div>
                       <textarea
                         placeholder="Escreva a sua mensagem"
                         value={msg}
                         onChange={e => setWizardContent(prev => ({ ...prev, mensagem: e.target.value }))}
-                        className="flex-1 bg-transparent px-4 py-3 text-sm text-white placeholder-muted resize-none outline-none min-h-[200px]"
+                        className="w-full bg-transparent border-2 border-accent rounded-xl px-4 py-3 text-sm text-white placeholder-muted resize-none outline-none min-h-[200px]"
                       />
-                      <div className="flex items-center justify-between px-3 py-2 border-t border-border" style={{ background: '#202c33' }}>
-                        <button type="button" className="text-muted hover:text-white transition-colors">
+                      <div className="flex items-center justify-between px-1">
+                        <button type="button" className="text-muted hover:text-white transition-colors p-1">
                           <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         </button>
                         <div className="flex items-center gap-2">
-                          <button type="button" className="text-xs font-semibold text-muted border border-border px-3 py-1.5 rounded-lg hover:text-white hover:border-border-2 transition-colors">MODELOS</button>
+                          <button type="button" className="flex items-center gap-1.5 text-xs font-bold text-black px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80" style={{ background: '#f5c518' }}>
+                            <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+                            MODELOS
+                          </button>
                           <button
                             type="button"
                             onClick={nextStep}
                             disabled={!msg.trim()}
                             className="flex items-center gap-1 text-xs font-semibold text-muted border border-border px-3 py-1.5 rounded-lg hover:text-white hover:border-border-2 transition-colors disabled:opacity-30"
                           >
+                            <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m-6-6l6 6-6 6" /></svg>
                             SALVAR
-                            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
                           </button>
                         </div>
                       </div>
                     </div>
 
-                    {/* Right: Options sidebar */}
-                    <div className="w-52 flex-shrink-0 self-start">
+                    {/* Right: Options */}
+                    <div className="w-48 flex-shrink-0 flex flex-col divide-y divide-border">
                       <div
-                        className="flex items-center justify-between px-4 py-3.5 border-b border-border cursor-pointer hover:bg-surface-2 transition-colors"
+                        className="flex items-center justify-between py-3 cursor-pointer hover:opacity-80 transition-opacity"
                         onClick={() => setWizardContent(prev => ({ ...prev, mentionAll: !mentionAll }))}
                       >
                         <div className="flex items-center gap-2 min-w-0">
-                          <svg width="12" height="12" fill="none" stroke="#71717a" strokeWidth="2" viewBox="0 0 24 24" className="flex-shrink-0"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                          <span className="text-sm text-secondary truncate">Marcar todos os participantes</span>
+                          <svg width="11" height="11" fill="none" stroke="#71717a" strokeWidth="2.5" viewBox="0 0 24 24" className="flex-shrink-0"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                          <span className="text-sm text-secondary">Marcar todos os participantes</span>
                         </div>
                         <span className="text-xs text-muted ml-2 flex-shrink-0">{mentionAll ? 'Sim' : 'Não'}</span>
                       </div>
-                      <div className="px-4 py-3.5">
-                        <div className="flex items-center justify-between mb-3">
+                      <div className="py-3">
+                        <div className="flex items-center justify-between mb-2.5">
                           <div className="flex items-center gap-2 min-w-0">
-                            <svg width="12" height="12" fill="none" stroke="#71717a" strokeWidth="2" viewBox="0 0 24 24" className="flex-shrink-0"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                            <span className="text-sm text-secondary truncate">Velocidade de envio</span>
+                            <svg width="11" height="11" fill="none" stroke="#71717a" strokeWidth="2.5" viewBox="0 0 24 24" className="flex-shrink-0"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                            <span className="text-sm text-secondary">Velocidade de envio</span>
                           </div>
                           <div className="text-right ml-2 flex-shrink-0">
-                            <p className="text-xs text-muted leading-none">{selectedOpt.desc}</p>
-                            <p className="text-xs text-muted leading-none mt-0.5">{selectedOpt.label}</p>
+                            <p className="text-xs font-medium text-white leading-none">{selectedOpt.desc}</p>
+                            <p className="text-[10px] text-muted leading-none mt-0.5">{selectedOpt.label}</p>
                           </div>
                         </div>
-                        <div className="flex flex-col gap-1.5">
+                        <div className="flex flex-col gap-1">
                           {intervalOpts.map(opt => {
                             const sel = curMin === opt.min
                             return (
@@ -1149,7 +1143,7 @@ export default function CampanhaDetalhe() {
                                 key={opt.label}
                                 type="button"
                                 onClick={() => setWizardContent(prev => ({ ...prev, intervaloMin: opt.min, intervaloMax: opt.max }))}
-                                className={`flex items-center justify-between w-full px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${sel ? 'bg-accent text-black border-accent' : 'bg-surface-2 border-border text-muted hover:text-white hover:border-border-2'}`}
+                                className={`flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors ${sel ? 'bg-accent text-black border-accent' : 'bg-surface-2 border-border text-muted hover:text-white hover:border-border-2'}`}
                               >
                                 <span>{opt.desc}</span>
                                 <span className={sel ? 'opacity-70' : 'opacity-50'}>{opt.label}</span>
