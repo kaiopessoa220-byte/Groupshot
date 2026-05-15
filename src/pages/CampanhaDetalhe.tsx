@@ -1080,34 +1080,6 @@ export default function CampanhaDetalhe() {
                           className="input w-auto"
                         />
                       </div>
-                      <div>
-                        <label className="block text-xs text-muted uppercase tracking-wider mb-2">Intervalo entre grupos</label>
-                        <div className="flex gap-2">
-                          {[
-                            { label: '10–20s', min: 10, max: 20, desc: 'Rápido' },
-                            { label: '40–60s', min: 40, max: 60, desc: 'Padrão' },
-                            { label: '60–120s', min: 60, max: 120, desc: 'Seguro' },
-                          ].map(opt => {
-                            const curMin = (wizardContent as { intervaloMin?: number }).intervaloMin ?? 40
-                            const selected = curMin === opt.min
-                            return (
-                              <button
-                                key={opt.label}
-                                type="button"
-                                onClick={() => setWizardContent(prev => ({ ...prev, intervaloMin: opt.min, intervaloMax: opt.max }))}
-                                className={`flex-1 py-2 px-2 rounded-lg border text-xs font-medium transition-colors ${
-                                  selected
-                                    ? 'bg-accent text-black border-accent'
-                                    : 'bg-surface-2 border-border text-muted hover:text-white hover:border-border-2'
-                                }`}
-                              >
-                                <div className="font-semibold">{opt.label}</div>
-                                <div className="opacity-70 mt-0.5">{opt.desc}</div>
-                              </button>
-                            )
-                          })}
-                        </div>
-                      </div>
                     </div>
 
                     {/* WhatsApp Preview */}
@@ -1152,6 +1124,35 @@ export default function CampanhaDetalhe() {
                           )}
                         </div>
                       </div>
+                    </div>
+                  </div>
+                  {/* Intervalo — full width below flex row */}
+                  <div>
+                    <label className="block text-xs text-muted uppercase tracking-wider mb-2">Intervalo entre grupos</label>
+                    <div className="flex gap-2">
+                      {([
+                        { label: '10–20s', min: 10, max: 20, desc: 'Rápido' },
+                        { label: '40–60s', min: 40, max: 60, desc: 'Padrão' },
+                        { label: '60–120s', min: 60, max: 120, desc: 'Seguro' },
+                      ] as const).map(opt => {
+                        const curMin = (wizardContent as { intervaloMin?: number }).intervaloMin ?? 40
+                        const selected = curMin === opt.min
+                        return (
+                          <button
+                            key={opt.label}
+                            type="button"
+                            onClick={() => setWizardContent(prev => ({ ...prev, intervaloMin: opt.min, intervaloMax: opt.max }))}
+                            className={`flex-1 py-2.5 px-3 rounded-lg border text-xs font-medium transition-colors ${
+                              selected
+                                ? 'bg-accent text-black border-accent'
+                                : 'bg-surface-2 border-border text-muted hover:text-white hover:border-border-2'
+                            }`}
+                          >
+                            <span className="font-semibold">{opt.label}</span>
+                            <span className="ml-1.5 opacity-60">{opt.desc}</span>
+                          </button>
+                        )
+                      })}
                     </div>
                   </div>
                 )
