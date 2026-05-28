@@ -448,7 +448,7 @@ serve(async (req: Request) => {
         fetch(N8N_DISPATCHER, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ groupId: item.group_id, instancia: item.instancia, sendAt: item.send_at, message: bloco.mensagem, imageUrl: bloco.imageUrl, imageMimetype: bloco.imageMimetype || 'image/jpeg', mentionAll, disparoItemId: item.id }),
+          body: JSON.stringify({ groupId: item.group_id, instancia: item.instancia, sendAt: item.send_at, message: bloco.mensagem, imageUrl: bloco.imageUrl, imageMimetype: bloco.imageMimetype ?? 'image/jpeg', mentionAll, disparoItemId: item.id }),
         }).catch(() => {})
       }
     }
