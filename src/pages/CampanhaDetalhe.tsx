@@ -1090,7 +1090,7 @@ export default function CampanhaDetalhe() {
                         <input ref={wizardFileRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) { setWizardContent(prev => ({ ...prev, imageFile: f })); setImagePreview(URL.createObjectURL(f)) } }} />
                       </div>
                       {/* Chat preview body */}
-                      <div className="min-h-56 flex flex-col justify-end gap-1.5 p-3 overflow-y-auto max-h-80" style={{ background: '#111b21', backgroundImage: 'radial-gradient(circle, #1f2c34 1px, transparent 1px)', backgroundSize: '18px 18px' }}>
+                      <div className="min-h-56 flex flex-col justify-end gap-1.5 p-3 overflow-y-auto max-h-80" style={{ background: '#0b141a', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='304' height='304'%3E%3Cg fill='%23182229' fill-opacity='0.4'%3E%3Cpath d='M56 4c0-2.2 1.8-4 4-4s4 1.8 4 4v4c0 2.2-1.8 4-4 4s-4-1.8-4-4V4zm52 32c0-2.2 1.8-4 4-4s4 1.8 4 4v4c0 2.2-1.8 4-4 4s-4-1.8-4-4v-4zm-52 64c0-2.2 1.8-4 4-4s4 1.8 4 4v4c0 2.2-1.8 4-4 4s-4-1.8-4-4v-4zm104-32c0-2.2 1.8-4 4-4s4 1.8 4 4v4c0 2.2-1.8 4-4 4s-4-1.8-4-4v-4zm-52 96c0-2.2 1.8-4 4-4s4 1.8 4 4v4c0 2.2-1.8 4-4 4s-4-1.8-4-4v-4z'/%3E%3Cpath d='M12 52a8 8 0 110 16 8 8 0 010-16zm80 80a8 8 0 110 16 8 8 0 010-16zm80-80a8 8 0 110 16 8 8 0 010-16zm80 80a8 8 0 110 16 8 8 0 010-16zM12 132a8 8 0 110 16 8 8 0 010-16zm160 80a8 8 0 110 16 8 8 0 010-16z'/%3E%3Cpath d='M24 16c0-4.4 3.6-8 8-8h16c4.4 0 8 3.6 8 8v8c0 4.4-3.6 8-8 8H32c-4.4 0-8-3.6-8-8v-8zm128 64c0-4.4 3.6-8 8-8h16c4.4 0 8 3.6 8 8v8c0 4.4-3.6 8-8 8h-16c-4.4 0-8-3.6-8-8v-8zm-128 64c0-4.4 3.6-8 8-8h16c4.4 0 8 3.6 8 8v8c0 4.4-3.6 8-8 8H32c-4.4 0-8-3.6-8-8v-8zm128 64c0-4.4 3.6-8 8-8h16c4.4 0 8 3.6 8 8v8c0 4.4-3.6 8-8 8h-16c-4.4 0-8-3.6-8-8v-8z'/%3E%3C/g%3E%3C/svg%3E")`, backgroundSize: '304px 304px' }}>
                         {blocos.length === 0 && !msg && !imagePreview ? (
                           <div className="text-center py-4">
                             <p className="text-[10px]" style={{ color: '#8696a0' }}>Digite uma mensagem para ver o preview</p>
@@ -1174,11 +1174,13 @@ export default function CampanhaDetalhe() {
                             type="button"
                             onClick={handleSalvarBloco}
                             disabled={!msg.trim() && !imagePreview}
-                            className="flex items-center gap-1 text-xs font-semibold text-muted border border-border px-3 py-1.5 rounded-lg hover:text-white hover:border-border-2 transition-colors disabled:opacity-30"
+                            className="w-10 h-10 rounded-full flex items-center justify-center transition-opacity hover:opacity-85 disabled:opacity-30 flex-shrink-0"
+                            style={{ background: '#00a884' }}
                             title="Salvar como bloco e adicionar outro"
                           >
-                            <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
-                            SALVAR
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="white"/>
+                            </svg>
                           </button>
                         </div>
                       </div>
