@@ -1073,9 +1073,9 @@ export default function CampanhaDetalhe() {
                   { d: 'M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z', fn: undefined },
                 ]
                 return (
-                  <div className="flex gap-4 items-start">
+                  <div className="flex gap-5 items-start">
                     {/* Left: Editor de mensagens */}
-                    <div className="w-56 flex-shrink-0 rounded-xl overflow-hidden border border-border">
+                    <div className="w-80 flex-shrink-0 rounded-xl overflow-hidden border border-border">
                       <div className="flex items-center justify-between px-3 py-2.5" style={{ background: '#202c33' }}>
                         <span className="text-xs font-medium text-secondary">Editor de mensagens</span>
                         <button
@@ -1089,7 +1089,7 @@ export default function CampanhaDetalhe() {
                         <input ref={wizardFileRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) { setWizardContent(prev => ({ ...prev, imageFile: f })); setImagePreview(URL.createObjectURL(f)) } }} />
                       </div>
                       {/* Chat preview body */}
-                      <div className="min-h-44 flex flex-col justify-end gap-1.5 p-3 overflow-y-auto max-h-64" style={{ background: '#111b21', backgroundImage: 'radial-gradient(circle, #1f2c34 1px, transparent 1px)', backgroundSize: '18px 18px' }}>
+                      <div className="min-h-56 flex flex-col justify-end gap-1.5 p-3 overflow-y-auto max-h-80" style={{ background: '#111b21', backgroundImage: 'radial-gradient(circle, #1f2c34 1px, transparent 1px)', backgroundSize: '18px 18px' }}>
                         {blocos.length === 0 && !msg && !imagePreview ? (
                           <div className="text-center py-4">
                             <p className="text-[10px]" style={{ color: '#8696a0' }}>Digite uma mensagem para ver o preview</p>
@@ -1151,14 +1151,14 @@ export default function CampanhaDetalhe() {
                     <div className="flex-1 min-w-0 flex flex-col gap-1.5">
                       <div className="flex justify-end">
                         <button type="button" onClick={() => wizardFileRef.current?.click()} className="text-xs text-accent hover:text-accent/80 font-medium transition-colors">
-                          + Adicionar imagem
+                          + Adicionar preview
                         </button>
                       </div>
                       <textarea
                         placeholder="Escreva a sua mensagem"
                         value={msg}
                         onChange={e => setWizardContent(prev => ({ ...prev, mensagem: e.target.value }))}
-                        className="w-full bg-transparent border-2 border-accent rounded-xl px-4 py-3 text-sm text-white placeholder-muted resize-none outline-none min-h-[200px]"
+                        className="w-full bg-transparent border-2 border-accent rounded-xl px-4 py-3 text-sm text-white placeholder-muted resize-none outline-none min-h-[230px]"
                       />
                       <div className="flex items-center justify-between px-1">
                         <button type="button" className="text-muted hover:text-white transition-colors p-1">
@@ -1184,7 +1184,7 @@ export default function CampanhaDetalhe() {
                     </div>
 
                     {/* Right: Options */}
-                    <div className="w-48 flex-shrink-0 flex flex-col divide-y divide-border">
+                    <div className="w-56 flex-shrink-0 flex flex-col divide-y divide-border">
                       <div
                         className="flex items-center justify-between py-3 cursor-pointer hover:opacity-80 transition-opacity"
                         onClick={() => setWizardContent(prev => ({ ...prev, mentionAll: !mentionAll }))}
