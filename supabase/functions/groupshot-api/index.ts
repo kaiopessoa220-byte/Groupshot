@@ -136,10 +136,12 @@ serve(async (req: Request) => {
       const data = await res.json()
       const list = Array.isArray(data) ? data : (data.data ?? [])
       // Normaliza para { id, subject, size }
-      const normalized = list.map((g: { id: string; subject: string; participants?: unknown[]; size?: number }) => ({
+      const normalized = list.map((g: { id: string; subject: string; participants?: unknown[]; size?: number; isCommunity?: boolean; isCommunityAnnounce?: boolean; linkedParent?: string }) => ({
         id: g.id,
         subject: g.subject,
         size: g.size ?? (Array.isArray(g.participants) ? g.participants.length : undefined),
+        isCommunity: !!(g.isCommunity || g.isCommunityAnnounce),
+        linkedParent: g.linkedParent,
       }))
       return json(normalized)
     } catch (e) {

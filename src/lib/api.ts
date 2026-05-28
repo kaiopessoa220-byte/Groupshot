@@ -22,6 +22,8 @@ export interface Group {
   id: string
   subject: string
   size?: number
+  isCommunity?: boolean
+  linkedParent?: string
 }
 
 export interface Disparo {

@@ -130,6 +130,28 @@ function getInitials(name: string) {
     .toUpperCase()
 }
 
+function GroupAvatar({ pic, name, size = 10, isCommunity = false }: { pic?: string | null; name: string; size?: number; isCommunity?: boolean }) {
+  const sz = `w-${size} h-${size}`
+  return (
+    <div className={`${sz} relative flex-shrink-0`}>
+      {pic ? (
+        <img src={pic} alt={name} className={`${sz} rounded-full object-cover border border-border`} />
+      ) : (
+        <div className={`${sz} rounded-full bg-surface-2 border border-border flex items-center justify-center`}>
+          <span className="text-xs font-semibold text-secondary">{getInitials(name)}</span>
+        </div>
+      )}
+      {isCommunity && (
+        <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-accent flex items-center justify-center border border-surface" title="Comunidade">
+          <svg width="9" height="9" fill="none" stroke="#000" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+          </svg>
+        </span>
+      )}
+    </div>
+  )
+}
+
 export default function CampanhaDetalhe() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -149,6 +171,7 @@ export default function CampanhaDetalhe() {
   const [showAddGrupos, setShowAddGrupos] = useState(false)
   const [instGroups, setInstGroups] = useState<Record<string, { groups: Group[]; error: boolean }>>({})
   const [instLoading, setInstLoading] = useState<Record<string, boolean>>({})
+  const [communityGroupIds, setCommunityGroupIds] = useState<Set<string>>(new Set())
   const [groupSearch, setGroupSearch] = useState('')
   const [selectedGroups, setSelectedGroups] = useState<{ id: string; instancia: string }[]>([])
   const [salvandoGrupos, setSalvandoGrupos] = useState(false)
@@ -218,7 +241,14 @@ export default function CampanhaDetalhe() {
       if (instGroups[inst.name]) return
       setInstLoading(prev => ({ ...prev, [inst.name]: true }))
       fetchGroups(inst.name)
-        .then(gs => setInstGroups(prev => ({ ...prev, [inst.name]: { groups: gs, error: false } })))
+        .then(gs => {
+          setInstGroups(prev => ({ ...prev, [inst.name]: { groups: gs, error: false } }))
+          setCommunityGroupIds(prev => {
+            const next = new Set(prev)
+            gs.filter(g => g.isCommunity).forEach(g => next.add(g.id))
+            return next
+          })
+        })
         .catch(() => setInstGroups(prev => ({ ...prev, [inst.name]: { groups: [], error: true } })))
         .finally(() => setInstLoading(prev => ({ ...prev, [inst.name]: false })))
     })
@@ -663,19 +693,9 @@ export default function CampanhaDetalhe() {
                     key={grupo.id}
                     className="bg-card border border-border rounded-xl p-4 flex flex-col items-center text-center relative group"
                   >
-                    {pic ? (
-                      <img
-                        src={pic}
-                        alt={grupo.group_name}
-                        className="w-12 h-12 rounded-full object-cover border border-border mb-3"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-surface-2 border border-border flex items-center justify-center mb-3 flex-shrink-0">
-                        <span className="text-sm font-semibold text-secondary">
-                          {getInitials(grupo.group_name)}
-                        </span>
-                      </div>
-                    )}
+                    <div className="mb-3">
+                      <GroupAvatar pic={pic} name={grupo.group_name} size={12} isCommunity={communityGroupIds.has(grupo.group_id)} />
+                    </div>
                     <p className="text-sm font-medium text-white truncate w-full" title={grupo.group_name}>
                       {grupo.group_name}
                     </p>
@@ -969,19 +989,15 @@ export default function CampanhaDetalhe() {
                     {campanha.campanha_grupos.map(g => {
                       const pic = groupPics[g.group_id]
                       const sel = wizardGroupIds.includes(g.group_id)
+                      const isCommunity = communityGroupIds.has(g.group_id)
                       return (
                         <label
                           key={g.id}
                           className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-surface transition-colors"
                         >
-                          {pic ? (
-                            <img src={pic} alt={g.group_name} className="w-8 h-8 rounded-full object-cover border border-border flex-shrink-0" />
-                          ) : (
-                            <div className="w-8 h-8 rounded-full bg-surface-2 border border-border flex items-center justify-center flex-shrink-0">
-                              <span className="text-xs font-semibold text-secondary">{getInitials(g.group_name)}</span>
-                            </div>
-                          )}
+                          <GroupAvatar pic={pic} name={g.group_name} size={8} isCommunity={isCommunity} />
                           <span className="flex-1 text-sm text-white truncate">{g.group_name}</span>
+                          {isCommunity && <span className="text-[10px] text-accent bg-accent/10 px-1.5 py-0.5 rounded flex-shrink-0">Comunidade</span>}
                           <input
                             type="checkbox"
                             className="accent-accent w-4 h-4 flex-shrink-0"
@@ -1691,7 +1707,9 @@ export default function CampanhaDetalhe() {
                         )}
                         className="accent-accent w-4 h-4 flex-shrink-0"
                       />
+                      <GroupAvatar pic={null} name={g.subject} size={7} isCommunity={!!g.isCommunity} />
                       <span className="text-sm text-white flex-1 truncate">{g.subject}</span>
+                      {g.isCommunity && <span className="text-[10px] text-accent bg-accent/10 px-1.5 py-0.5 rounded flex-shrink-0">Comunidade</span>}
                       {filterInst === 'todas' && (
                         <span className="text-[10px] text-muted bg-surface px-1.5 py-0.5 rounded flex-shrink-0">{instancia}</span>
                       )}
