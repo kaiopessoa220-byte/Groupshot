@@ -1036,6 +1036,7 @@ export default function CampanhaDetalhe() {
               {wizardAction === 'enviar-mensagem' && (() => {
                 const msg = (wizardContent as { mensagem?: string }).mensagem ?? ''
                 const mentionAll = (wizardContent as { mentionAll?: boolean }).mentionAll ?? false
+                const tempMessages = (wizardContent as { tempMessages?: boolean }).tempMessages ?? false
                 const curMin = (wizardContent as { intervaloMin?: number }).intervaloMin ?? 40
                 const blocos = (wizardContent as { blocos?: Array<{ mensagem: string; imagePreview?: string }> }).blocos ?? []
                 const now = new Date()
@@ -1183,26 +1184,35 @@ export default function CampanhaDetalhe() {
                       </div>
                     </div>
 
-                    {/* Right: Options */}
-                    <div className="w-56 flex-shrink-0 flex flex-col divide-y divide-border">
+                    {/* Right: Options — collapsed accordion rows */}
+                    <div className="w-56 flex-shrink-0 flex flex-col border border-border rounded-xl overflow-hidden">
+                      {/* Marcar todos os participantes */}
                       <div
-                        className="flex items-center justify-between py-3 cursor-pointer hover:opacity-80 transition-opacity"
+                        className="flex items-center gap-2.5 px-4 py-3.5 cursor-pointer hover:bg-surface-2 transition-colors border-b border-border"
                         onClick={() => setWizardContent(prev => ({ ...prev, mentionAll: !mentionAll }))}
                       >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <svg width="11" height="11" fill="none" stroke="#71717a" strokeWidth="2.5" viewBox="0 0 24 24" className="flex-shrink-0"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                          <span className="text-sm text-secondary">Marcar todos os participantes</span>
-                        </div>
-                        <span className="text-xs text-muted ml-2 flex-shrink-0">{mentionAll ? 'Sim' : 'Não'}</span>
+                        <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className="flex-shrink-0 text-accent"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                        <span className="text-sm text-secondary flex-1 leading-tight">Marcar todos os participantes</span>
+                        {mentionAll && <svg width="12" height="12" fill="none" stroke="#f5c518" strokeWidth="2.5" viewBox="0 0 24 24" className="flex-shrink-0"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                       </div>
-                      <div className="py-3">
-                        <div className="flex items-center justify-between mb-2.5">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <svg width="11" height="11" fill="none" stroke="#71717a" strokeWidth="2.5" viewBox="0 0 24 24" className="flex-shrink-0"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                            <span className="text-sm text-secondary">Velocidade de envio</span>
-                          </div>
-                          <div className="text-right ml-2 flex-shrink-0">
-                            <p className="text-xs font-medium text-white leading-none">{selectedOpt.desc}</p>
+
+                      {/* Mensagens temporárias */}
+                      <div
+                        className="flex items-center gap-2.5 px-4 py-3.5 cursor-pointer hover:bg-surface-2 transition-colors border-b border-border"
+                        onClick={() => setWizardContent(prev => ({ ...prev, tempMessages: !tempMessages }))}
+                      >
+                        <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className="flex-shrink-0 text-accent"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                        <span className="text-sm text-secondary flex-1 leading-tight">Mensagens temporárias</span>
+                        <span className="text-xs text-muted flex-shrink-0">{tempMessages ? 'on' : 'off'}</span>
+                      </div>
+
+                      {/* Velocidade de envio */}
+                      <div className="px-4 py-3.5 border-b border-border">
+                        <div className="flex items-center gap-2.5 mb-2.5">
+                          <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className="flex-shrink-0 text-accent"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                          <span className="text-sm text-secondary flex-1">Velocidade de envio</span>
+                          <div className="text-right flex-shrink-0">
+                            <p className="text-xs font-semibold text-white leading-none">{selectedOpt.desc}</p>
                             <p className="text-[10px] text-muted leading-none mt-0.5">{selectedOpt.label}</p>
                           </div>
                         </div>
