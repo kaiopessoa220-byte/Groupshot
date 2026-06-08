@@ -1676,7 +1676,7 @@ export default function CampanhaDetalhe() {
                           ? 'bg-accent text-black border-accent'
                           : hasError
                           ? 'bg-red-500/10 border-red-500/30 text-red-400'
-                          : 'bg-surface-2 border-border text-muted hover:text-white'
+                          : 'bg-surface-2 border-border text-muted hover:text-foreground'
                       }`}
                     >
                       {loading && <span className="w-2.5 h-2.5 border border-current border-t-transparent rounded-full animate-spin" />}
@@ -1701,7 +1701,7 @@ export default function CampanhaDetalhe() {
                   placeholder="Buscar grupos..."
                   value={groupSearch}
                   onChange={e => setGroupSearch(e.target.value)}
-                  className="flex-1 bg-transparent text-sm text-white placeholder-muted focus:outline-none"
+                  className="flex-1 bg-transparent text-sm text-foreground placeholder-muted focus:outline-none"
                 />
               </div>
               <div className="max-h-64 overflow-y-auto divide-y divide-border">
@@ -1741,7 +1741,7 @@ export default function CampanhaDetalhe() {
                         className="accent-accent w-4 h-4 flex-shrink-0"
                       />
                       <GroupAvatar pic={null} name={g.subject} size={7} isCommunity={!!g.isCommunity} />
-                      <span className="text-sm text-white flex-1 truncate">{g.subject}</span>
+                      <span className="text-sm text-foreground flex-1 truncate">{g.subject}</span>
                       {g.isCommunity && <span className="text-[10px] text-accent bg-accent/10 px-1.5 py-0.5 rounded flex-shrink-0">Comunidade</span>}
                       {filterInst === 'todas' && (
                         <span className="text-[10px] text-muted bg-surface px-1.5 py-0.5 rounded flex-shrink-0">{instancia}</span>
@@ -1786,7 +1786,7 @@ export default function CampanhaDetalhe() {
               </div>
               <button
                 onClick={() => setShowCriarGrupos(false)}
-                className="text-muted hover:text-white transition-colors"
+                className="text-muted hover:text-foreground transition-colors"
               >
                 <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -1857,7 +1857,7 @@ export default function CampanhaDetalhe() {
                       className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
                         criarInstancia === inst.name
                           ? 'bg-accent text-black border-accent'
-                          : 'bg-surface-2 border-border text-muted hover:text-white hover:border-border-2'
+                          : 'bg-surface-2 border-border text-muted hover:text-foreground hover:border-border-2'
                       }`}
                     >
                       {inst.name}
