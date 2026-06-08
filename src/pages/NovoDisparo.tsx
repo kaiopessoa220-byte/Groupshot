@@ -128,7 +128,7 @@ export default function NovoDisparo() {
       {/* Header */}
       <div className="mb-8">
         <p className="text-xs text-muted uppercase tracking-widest mb-1.5">Envio</p>
-        <h1 className="text-2xl font-semibold text-white tracking-tight">Novo Disparo</h1>
+        <h1 className="text-2xl font-semibold text-foreground tracking-tight">Novo Disparo</h1>
       </div>
 
       {error && (
@@ -167,7 +167,7 @@ export default function NovoDisparo() {
                   className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
                     selectedInstances.includes(inst.name)
                       ? 'bg-accent text-black border-accent'
-                      : 'bg-surface-2 border-border text-muted hover:text-white hover:border-border-2'
+                      : 'bg-surface-2 border-border text-muted hover:text-foreground hover:border-border-2'
                   }`}
                 >
                   {inst.name}
@@ -203,7 +203,7 @@ export default function NovoDisparo() {
                   placeholder="Buscar grupo..."
                   value={groupSearch}
                   onChange={e => setGroupSearch(e.target.value)}
-                  className="flex-1 bg-transparent text-sm text-white placeholder-muted focus:outline-none"
+                  className="flex-1 bg-transparent text-sm text-foreground placeholder-muted focus:outline-none"
                 />
                 <button
                   onClick={toggleAllGroups}
@@ -227,7 +227,7 @@ export default function NovoDisparo() {
                       onChange={() => toggleGroup(g.id)}
                       className="accent-accent w-4 h-4 flex-shrink-0"
                     />
-                    <span className="text-sm text-white flex-1 truncate">{g.subject}</span>
+                    <span className="text-sm text-foreground flex-1 truncate">{g.subject}</span>
                     {g.size != null && (
                       <span className="text-[11px] text-muted flex-shrink-0">{g.size} part.</span>
                     )}

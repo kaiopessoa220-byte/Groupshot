@@ -61,7 +61,7 @@ export default function Campanhas() {
     <div className="p-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold text-white tracking-tight">Campanhas</h1>
+        <h1 className="text-2xl font-semibold text-foreground tracking-tight">Campanhas</h1>
         <button
           onClick={() => setShowNova(true)}
           className="flex items-center gap-2 px-4 py-2 rounded-lg border border-accent text-accent text-sm font-semibold hover:bg-accent hover:text-black transition-colors"
@@ -98,7 +98,7 @@ export default function Campanhas() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="bg-card border border-border rounded-xl px-6 py-16 text-center">
-          <p className="text-sm font-medium text-white mb-1">Nenhuma campanha</p>
+          <p className="text-sm font-medium text-foreground mb-1">Nenhuma campanha</p>
           <p className="text-xs text-muted mb-4">Crie uma campanha para organizar seus grupos</p>
           <button onClick={() => setShowNova(true)} className="btn-primary text-xs">Criar primeira campanha</button>
         </div>
@@ -117,16 +117,16 @@ export default function Campanhas() {
                 return (
                   <div className="grid grid-cols-3 divide-x divide-border/60 border-b border-border/60">
                     <div className="px-3 pt-2.5 pb-2 flex flex-col items-center">
-                      <span className="text-sm font-bold text-white">{campanha.campanha_grupos.length}</span>
+                      <span className="text-sm font-bold text-foreground">{campanha.campanha_grupos.length}</span>
                       <span className="text-[10px] text-muted mt-0.5">Grupos</span>
                     </div>
                     <div className="px-3 pt-2.5 pb-2 flex flex-col items-center">
-                      <span className="text-sm font-bold text-white">{loading ? '—' : s.participantes.toLocaleString('pt-BR')}</span>
+                      <span className="text-sm font-bold text-foreground">{loading ? '—' : s.participantes.toLocaleString('pt-BR')}</span>
                       <span className="text-[10px] text-muted mt-0.5">Participantes</span>
                     </div>
                     <div className="px-3 pt-2.5 pb-2 flex flex-col items-center">
                       {loading ? (
-                        <span className="text-sm font-bold text-white">—</span>
+                        <span className="text-sm font-bold text-foreground">—</span>
                       ) : (
                         <span className="text-sm font-bold">
                           <span className="text-green-400">{s.gruposDisponiveis}</span>
@@ -158,7 +158,7 @@ export default function Campanhas() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
-                    <p className="text-sm font-semibold text-white truncate">{campanha.nome}</p>
+                    <p className="text-sm font-semibold text-foreground truncate">{campanha.nome}</p>
                   </div>
                   <p className="text-[11px] text-muted truncate pl-4">
                     {campanha.descricao || `${campanha.campanha_grupos.length} grupos`}

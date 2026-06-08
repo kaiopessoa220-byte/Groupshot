@@ -23,7 +23,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-bg flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-10 justify-center">
@@ -32,11 +32,11 @@ export default function Login() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
-          <span className="font-bold text-white text-xl tracking-tight">GroupShot</span>
+          <span className="font-bold text-foreground text-xl tracking-tight">GroupShot</span>
         </div>
 
         <div className="bg-surface border border-border rounded-2xl p-8 shadow-modal">
-          <h1 className="text-lg font-semibold text-white mb-1">Entrar na sua conta</h1>
+          <h1 className="text-lg font-semibold text-foreground mb-1">Entrar na sua conta</h1>
           <p className="text-xs text-muted mb-7">Use suas credenciais para acessar o painel.</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">

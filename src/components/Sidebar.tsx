@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
 
 const nav = [
   {
@@ -26,6 +27,7 @@ const nav = [
 
 export default function Sidebar() {
   const { user, signOut } = useAuth()
+  const { theme, toggleTheme } = useTheme()
 
   const initials = user?.email
     ? user.email.slice(0, 2).toUpperCase()
@@ -41,7 +43,7 @@ export default function Sidebar() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
           </div>
-          <span className="font-semibold text-white text-[15px] tracking-tight">GroupShot</span>
+          <span className="font-semibold text-foreground text-[15px] tracking-tight">GroupShot</span>
         </div>
       </div>
 
@@ -58,7 +60,7 @@ export default function Sidebar() {
               `flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium transition-all duration-150 ${
                 isActive
                   ? 'bg-accent text-black'
-                  : 'text-muted hover:text-white hover:bg-surface-2'
+                  : 'text-muted hover:text-foreground hover:bg-surface-2'
               }`
             }
           >
@@ -68,15 +70,40 @@ export default function Sidebar() {
         ))}
       </nav>
 
+      {/* Theme toggle */}
+      <div className="px-4 pb-2">
+        <button
+          onClick={toggleTheme}
+          title={theme === 'dark' ? 'Mudar para modo claro' : 'Mudar para modo escuro'}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium text-muted hover:text-foreground hover:bg-surface-2 transition-all duration-150"
+        >
+          {theme === 'dark' ? (
+            <>
+              <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+              </svg>
+              Modo claro
+            </>
+          ) : (
+            <>
+              <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+              </svg>
+              Modo escuro
+            </>
+          )}
+        </button>
+      </div>
+
       {/* Footer — user + logout */}
-      <div className="mx-4 h-px bg-border mt-3" />
+      <div className="mx-4 h-px bg-border" />
       <div className="px-3 py-3">
         <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg group">
           <div className="w-7 h-7 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center flex-shrink-0">
             <span className="text-xs font-semibold text-accent">{initials}</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[12px] font-medium text-white leading-none truncate">{user?.email ?? ''}</p>
+            <p className="text-[12px] font-medium text-foreground leading-none truncate">{user?.email ?? ''}</p>
           </div>
           <button
             onClick={signOut}

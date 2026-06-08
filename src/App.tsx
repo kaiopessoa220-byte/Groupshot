@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 import Sidebar from './components/Sidebar'
 import Login from './pages/Login'
 import VisaoGeral from './pages/VisaoGeral'
@@ -14,7 +15,7 @@ function AppRoutes() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-bg flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-border border-t-accent rounded-full animate-spin" />
       </div>
     )
@@ -32,7 +33,7 @@ function AppRoutes() {
 
   return (
     <BrowserRouter>
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen bg-bg">
         <Sidebar />
         <main className="flex-1 overflow-y-auto">
           <Routes>
@@ -53,8 +54,10 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppRoutes />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </ThemeProvider>
   )
 }

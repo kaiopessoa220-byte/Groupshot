@@ -40,7 +40,7 @@ export default function VisaoGeral() {
         <div className="bg-card border border-border rounded-xl flex flex-col overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-border flex-shrink-0">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-white">Contas</span>
+              <span className="text-sm font-semibold text-foreground">Contas</span>
               <span className="text-xs text-muted">{connectedCount}/{instances.length}</span>
             </div>
             <button
@@ -64,7 +64,7 @@ export default function VisaoGeral() {
                 placeholder="Buscar"
                 value={searchContas}
                 onChange={e => setSearchContas(e.target.value)}
-                className="bg-transparent text-xs text-white placeholder-muted focus:outline-none flex-1"
+                className="bg-transparent text-xs text-foreground placeholder-muted focus:outline-none flex-1"
               />
             </div>
           </div>
@@ -82,11 +82,11 @@ export default function VisaoGeral() {
                   onClick={() => navigate('/contas')}
                   className="flex items-center gap-3 px-4 py-3 hover:bg-surface cursor-pointer transition-colors group"
                 >
-                  <div className="w-9 h-9 rounded-xl bg-surface-2 border border-border flex items-center justify-center flex-shrink-0 text-xs font-bold text-white">
+                  <div className="w-9 h-9 rounded-xl bg-surface-2 border border-border flex items-center justify-center flex-shrink-0 text-xs font-bold text-foreground">
                     {inst.name.slice(0, 2).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{inst.name}</p>
+                    <p className="text-sm font-medium text-foreground truncate">{inst.name}</p>
                     {inst.ownerJid && (
                       <p className="text-[11px] text-muted truncate">
                         +{inst.ownerJid.replace('@s.whatsapp.net', '').replace('@c.us', '')}
@@ -119,7 +119,7 @@ export default function VisaoGeral() {
         <div className="bg-card border border-border rounded-xl flex flex-col overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-border flex-shrink-0">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-white">Campanhas</span>
+              <span className="text-sm font-semibold text-foreground">Campanhas</span>
               <span className="text-xs text-muted">{campanhas.length}/∞</span>
             </div>
             <button
@@ -143,7 +143,7 @@ export default function VisaoGeral() {
                 placeholder="Buscar"
                 value={searchCamp}
                 onChange={e => setSearchCamp(e.target.value)}
-                className="bg-transparent text-xs text-white placeholder-muted focus:outline-none flex-1"
+                className="bg-transparent text-xs text-foreground placeholder-muted focus:outline-none flex-1"
               />
             </div>
           </div>
@@ -195,7 +195,7 @@ export default function VisaoGeral() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
-                      <p className="text-xs font-semibold text-white truncate">{c.nome}</p>
+                      <p className="text-xs font-semibold text-foreground truncate">{c.nome}</p>
                     </div>
                     <p className="text-[10px] text-muted truncate pl-3.5">
                       {c.descricao || `${c.campanha_grupos.length} grupos`}
@@ -213,7 +213,7 @@ export default function VisaoGeral() {
         {/* ── Disparos ── */}
         <div className="bg-card border border-border rounded-xl flex flex-col overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-border flex-shrink-0">
-            <span className="text-sm font-semibold text-white">Disparos</span>
+            <span className="text-sm font-semibold text-foreground">Disparos</span>
             <button
               onClick={() => navigate('/novo-disparo')}
               title="Novo disparo"
@@ -257,7 +257,7 @@ export default function VisaoGeral() {
             </button>
             <button
               onClick={() => navigate('/historico')}
-              className="w-full py-2 rounded-lg border border-border text-muted hover:text-white hover:border-border-2 text-xs transition-colors"
+              className="w-full py-2 rounded-lg border border-border text-muted hover:text-foreground hover:border-border-2 text-xs transition-colors"
             >
               Ver histórico
             </button>

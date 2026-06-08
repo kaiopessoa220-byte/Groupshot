@@ -525,7 +525,7 @@ export default function CampanhaDetalhe() {
       <div className="flex items-center gap-3 mb-7">
         <button
           onClick={() => navigate('/campanhas')}
-          className="w-7 h-7 rounded-lg bg-surface-2 border border-border flex items-center justify-center text-muted hover:text-white hover:border-border-2 transition-colors flex-shrink-0"
+          className="w-7 h-7 rounded-lg bg-surface-2 border border-border flex items-center justify-center text-muted hover:text-foreground hover:border-border-2 transition-colors flex-shrink-0"
         >
           <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -537,7 +537,7 @@ export default function CampanhaDetalhe() {
           </svg>
         </div>
         <div>
-          <h1 className="text-lg font-semibold text-white leading-tight">{campanha.nome}</h1>
+          <h1 className="text-lg font-semibold text-foreground leading-tight">{campanha.nome}</h1>
           <p className="text-xs text-muted">{campanha.campanha_grupos.length} grupos · {campanha.instancias?.length ?? 0} instâncias</p>
         </div>
       </div>
@@ -554,7 +554,7 @@ export default function CampanhaDetalhe() {
             onClick={() => setTab(t.key)}
             className={`px-4 py-2.5 text-[13px] font-medium border-b-2 -mb-px transition-colors ${
               tab === t.key
-                ? 'border-accent text-white'
+                ? 'border-accent text-foreground'
                 : 'border-transparent text-muted hover:text-secondary'
             }`}
           >
@@ -584,7 +584,7 @@ export default function CampanhaDetalhe() {
               )}
             </div>
             <div>
-              <p className="text-sm font-medium text-white mb-1">{campanha.nome}</p>
+              <p className="text-sm font-medium text-foreground mb-1">{campanha.nome}</p>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => fotoInputRef.current?.click()}
@@ -619,7 +619,7 @@ export default function CampanhaDetalhe() {
               { label: 'Disparos', value: atividades.length },
             ].map(s => (
               <div key={s.label} className="bg-card border border-border rounded-xl p-4">
-                <p className="text-2xl font-bold text-white tracking-tight">{s.value}</p>
+                <p className="text-2xl font-bold text-foreground tracking-tight">{s.value}</p>
                 <p className="text-xs text-muted mt-1">{s.label}</p>
               </div>
             ))}
@@ -628,7 +628,7 @@ export default function CampanhaDetalhe() {
           {/* Instâncias */}
           <div className="bg-card border border-border rounded-xl p-5">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-medium text-white">Instâncias da campanha</p>
+              <p className="text-sm font-medium text-foreground">Instâncias da campanha</p>
               <p className="text-xs text-muted">Clique para ativar/desativar</p>
             </div>
             {connectedInstances.length === 0 ? (
@@ -644,7 +644,7 @@ export default function CampanhaDetalhe() {
                       className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-medium transition-all ${
                         ativa
                           ? 'bg-accent text-black border-accent'
-                          : 'bg-surface-2 border-border text-muted hover:text-white hover:border-border-2'
+                          : 'bg-surface-2 border-border text-muted hover:text-foreground hover:border-border-2'
                       }`}
                     >
                       <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${ativa ? 'bg-black/40' : 'bg-green-400'}`} />
@@ -711,7 +711,7 @@ export default function CampanhaDetalhe() {
                     <div className="mb-3">
                       <GroupAvatar pic={pic} name={grupo.group_name} size={12} isCommunity={communityGroupIds.has(grupo.group_id)} />
                     </div>
-                    <p className="text-sm font-medium text-white truncate w-full" title={grupo.group_name}>
+                    <p className="text-sm font-medium text-foreground truncate w-full" title={grupo.group_name}>
                       {grupo.group_name}
                     </p>
                     <p className="text-xs text-muted mt-0.5">{grupo.instancia}</p>
@@ -761,7 +761,7 @@ export default function CampanhaDetalhe() {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-medium text-white truncate">{d.nome}</span>
+                          <span className="text-sm font-medium text-foreground truncate">{d.nome}</span>
                           <StatusBadge status={d.status} />
                         </div>
                         <p className="text-xs text-muted truncate">{d.mensagem}</p>
@@ -793,7 +793,7 @@ export default function CampanhaDetalhe() {
                       {d.disparo_itens.map(item => (
                         <div key={item.id} className="px-5 py-2.5 flex items-center justify-between">
                           <div>
-                            <p className="text-sm text-white">{item.group_name || item.group_id}</p>
+                            <p className="text-sm text-foreground">{item.group_name || item.group_id}</p>
                             <p className="text-xs text-muted mt-0.5">{item.instancia} · {fmt(item.send_at)}</p>
                           </div>
                           <StatusBadge status={item.status} />
@@ -870,8 +870,8 @@ export default function CampanhaDetalhe() {
                   key={action.key}
                   className={`flex items-center gap-3 px-4 py-3.5 rounded-xl border cursor-pointer transition-all ${
                     wizardAction === action.key
-                      ? 'bg-accent/10 border-accent/40 text-white'
-                      : 'bg-card border-border text-secondary hover:border-border-2 hover:text-white'
+                      ? 'bg-accent/10 border-accent/40 text-foreground'
+                      : 'bg-card border-border text-secondary hover:border-border-2 hover:text-foreground'
                   }`}
                 >
                   <span className={wizardAction === action.key ? 'text-accent' : 'text-muted'}>
@@ -927,7 +927,7 @@ export default function CampanhaDetalhe() {
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-white">{inst.name}</p>
+                          <p className="text-sm font-medium text-foreground">{inst.name}</p>
                           {inst.ownerJid && (
                             <p className="text-xs text-muted truncate">{inst.ownerJid.replace('@s.whatsapp.net', '')}</p>
                           )}
@@ -974,7 +974,7 @@ export default function CampanhaDetalhe() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
                 <div className="flex-1 text-left">
-                  <p className={`text-sm font-medium ${wizardGroupsMode === 'todos' ? 'text-white' : 'text-secondary'}`}>Todos os grupos</p>
+                  <p className={`text-sm font-medium ${wizardGroupsMode === 'todos' ? 'text-foreground' : 'text-secondary'}`}>Todos os grupos</p>
                   <p className="text-xs text-muted">{campanha.campanha_grupos.length} grupos na campanha</p>
                 </div>
                 <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${wizardGroupsMode === 'todos' ? 'border-accent' : 'border-border'}`}>
@@ -994,7 +994,7 @@ export default function CampanhaDetalhe() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                 </svg>
                 <div className="flex-1 text-left">
-                  <p className={`text-sm font-medium ${wizardGroupsMode === 'especificos' ? 'text-white' : 'text-secondary'}`}>Grupos específicos</p>
+                  <p className={`text-sm font-medium ${wizardGroupsMode === 'especificos' ? 'text-foreground' : 'text-secondary'}`}>Grupos específicos</p>
                   <p className="text-xs text-muted">
                     {wizardGroupIds.length > 0 ? `${wizardGroupIds.length} selecionados` : 'Escolha manualmente'}
                   </p>
@@ -1017,7 +1017,7 @@ export default function CampanhaDetalhe() {
                           className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-surface transition-colors"
                         >
                           <GroupAvatar pic={pic} name={g.group_name} size={8} isCommunity={isCommunity} />
-                          <span className="flex-1 text-sm text-white truncate">{g.group_name}</span>
+                          <span className="flex-1 text-sm text-foreground truncate">{g.group_name}</span>
                           {isCommunity && <span className="text-[10px] text-accent bg-accent/10 px-1.5 py-0.5 rounded flex-shrink-0">Comunidade</span>}
                           <input
                             type="checkbox"
@@ -1104,7 +1104,7 @@ export default function CampanhaDetalhe() {
                           type="button"
                           onClick={() => { setWizardContent(prev => ({ ...prev, mensagem: '', imageFile: undefined })); setImagePreview(null) }}
                           title="Limpar"
-                          className="text-muted hover:text-white transition-colors"
+                          className="text-muted hover:text-foreground transition-colors"
                         >
                           <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                         </button>
@@ -1180,10 +1180,10 @@ export default function CampanhaDetalhe() {
                         placeholder="Escreva a sua mensagem"
                         value={msg}
                         onChange={e => setWizardContent(prev => ({ ...prev, mensagem: e.target.value }))}
-                        className="w-full bg-transparent border-2 border-accent rounded-xl px-4 py-3 text-sm text-white placeholder-muted resize-none outline-none min-h-[230px]"
+                        className="w-full bg-transparent border-2 border-accent rounded-xl px-4 py-3 text-sm text-foreground placeholder-muted resize-none outline-none min-h-[230px]"
                       />
                       <div className="flex items-center justify-between px-1">
-                        <button type="button" className="text-muted hover:text-white transition-colors p-1">
+                        <button type="button" className="text-muted hover:text-foreground transition-colors p-1">
                           <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         </button>
                         <div className="flex items-center gap-2">
@@ -1235,7 +1235,7 @@ export default function CampanhaDetalhe() {
                           <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className="flex-shrink-0 text-accent"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
                           <span className="text-sm text-secondary flex-1">Velocidade de envio</span>
                           <div className="text-right flex-shrink-0">
-                            <p className="text-xs font-semibold text-white leading-none">{selectedOpt.desc}</p>
+                            <p className="text-xs font-semibold text-foreground leading-none">{selectedOpt.desc}</p>
                             <p className="text-[10px] text-muted leading-none mt-0.5">{selectedOpt.label}</p>
                           </div>
                         </div>
@@ -1247,7 +1247,7 @@ export default function CampanhaDetalhe() {
                                 key={opt.label}
                                 type="button"
                                 onClick={() => setWizardContent(prev => ({ ...prev, intervaloMin: opt.min, intervaloMax: opt.max }))}
-                                className={`flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors ${sel ? 'bg-accent text-black border-accent' : 'bg-surface-2 border-border text-muted hover:text-white hover:border-border-2'}`}
+                                className={`flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors ${sel ? 'bg-accent text-black border-accent' : 'bg-surface-2 border-border text-muted hover:text-foreground hover:border-border-2'}`}
                               >
                                 <span>{opt.desc}</span>
                                 <span className={sel ? 'opacity-70' : 'opacity-50'}>{opt.label}</span>
@@ -1370,7 +1370,7 @@ export default function CampanhaDetalhe() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <div>
-                    <p className="text-sm font-medium text-white mb-1">
+                    <p className="text-sm font-medium text-foreground mb-1">
                       {wizardAction === 'fechar-grupos' && 'Fechar grupos'}
                       {wizardAction === 'abrir-grupos' && 'Abrir grupos'}
                       {wizardAction === 'entrar-grupo' && 'Entrar nos grupos'}
@@ -1433,7 +1433,7 @@ export default function CampanhaDetalhe() {
                           }
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-white truncate">{campanha.nome}</p>
+                          <p className="text-sm font-semibold text-foreground truncate">{campanha.nome}</p>
                           {campanha.descricao && <p className="text-xs text-muted truncate">{campanha.descricao}</p>}
                         </div>
                       </div>
@@ -1447,11 +1447,11 @@ export default function CampanhaDetalhe() {
                             <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-surface-2 border border-border flex items-center justify-center">
                               {instPics[acc]
                                 ? <img src={instPics[acc]!} alt="" className="w-full h-full object-cover" />
-                                : <span className="text-white font-bold text-xs">{acc.slice(0,2).toUpperCase()}</span>
+                                : <span className="text-foreground font-bold text-xs">{acc.slice(0,2).toUpperCase()}</span>
                               }
                             </div>
                             <div className="min-w-0">
-                              <p className="text-sm font-semibold text-white truncate">{acc}</p>
+                              <p className="text-sm font-semibold text-foreground truncate">{acc}</p>
                               <div className="flex items-center gap-1 mt-0.5">
                                 <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
                                 <span className="text-xs text-muted">Conectado</span>
@@ -1472,7 +1472,7 @@ export default function CampanhaDetalhe() {
                           }
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-white truncate">{campanha.nome}</p>
+                          <p className="text-sm font-semibold text-foreground truncate">{campanha.nome}</p>
                           <p className="text-xs text-muted">
                             {wizardGroupsMode === 'todos'
                               ? `Todos os grupos (${campanha.campanha_grupos.length})`
@@ -1490,14 +1490,14 @@ export default function CampanhaDetalhe() {
                       <div className="flex items-center justify-between mb-2">
                         <p className="text-xs text-muted uppercase tracking-wider">Ação</p>
                         <div className="flex items-center gap-2">
-                          <button type="button" onClick={() => setWizardStep('acao')} className="text-muted hover:text-white transition-colors" title="Alterar ação">
+                          <button type="button" onClick={() => setWizardStep('acao')} className="text-muted hover:text-foreground transition-colors" title="Alterar ação">
                             <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                           </button>
                           {wizardAction === 'enviar-mensagem' && (
                             <button
                               type="button"
                               onClick={() => setWizardAgendarMode(m => !m)}
-                              className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors ${wizardAgendarMode ? 'bg-accent text-black border-accent' : 'border-border text-muted hover:text-white hover:border-border-2'}`}
+                              className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors ${wizardAgendarMode ? 'bg-accent text-black border-accent' : 'border-border text-muted hover:text-foreground hover:border-border-2'}`}
                             >
                               <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                               AGENDAR
@@ -1507,7 +1507,7 @@ export default function CampanhaDetalhe() {
                       </div>
                       <div className="bg-card border border-border rounded-xl px-4 py-3 flex items-center gap-2">
                         <svg width="14" height="14" fill="none" stroke="#f5c518" strokeWidth="2" viewBox="0 0 24 24" className="flex-shrink-0"><path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
-                        <span className="text-sm text-white">{ACTIONS.find(a => a.key === wizardAction)?.label}</span>
+                        <span className="text-sm text-foreground">{ACTIONS.find(a => a.key === wizardAction)?.label}</span>
                       </div>
                     </div>
 
@@ -1614,7 +1614,7 @@ export default function CampanhaDetalhe() {
               <button
                 onClick={prevStep}
                 disabled={wizardStepIndex === 0}
-                className="flex items-center gap-1.5 text-sm text-muted hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                className="flex items-center gap-1.5 text-sm text-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -1658,7 +1658,7 @@ export default function CampanhaDetalhe() {
                   className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors border ${
                     filterInst === 'todas'
                       ? 'bg-accent text-black border-accent'
-                      : 'bg-surface-2 border-border text-muted hover:text-white'
+                      : 'bg-surface-2 border-border text-muted hover:text-foreground'
                   }`}
                 >
                   Todas

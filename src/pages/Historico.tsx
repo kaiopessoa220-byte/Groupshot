@@ -43,7 +43,7 @@ export default function Historico() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <p className="text-xs text-muted uppercase tracking-widest mb-1.5">Registro</p>
-          <h1 className="text-2xl font-semibold text-white tracking-tight">Histórico</h1>
+          <h1 className="text-2xl font-semibold text-foreground tracking-tight">Histórico</h1>
         </div>
         <button
           onClick={load}
@@ -63,7 +63,7 @@ export default function Historico() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
           </div>
-          <p className="text-sm font-medium text-white mb-1">Nenhum disparo</p>
+          <p className="text-sm font-medium text-foreground mb-1">Nenhum disparo</p>
           <p className="text-xs text-muted">Crie um novo disparo para começar.</p>
         </div>
       ) : (
@@ -77,7 +77,7 @@ export default function Historico() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium text-white truncate">{d.nome}</span>
+                      <span className="text-sm font-medium text-foreground truncate">{d.nome}</span>
                       <StatusBadge status={d.status} />
                     </div>
                     <p className="text-xs text-muted truncate">{d.mensagem}</p>
@@ -118,7 +118,7 @@ export default function Historico() {
                   {d.disparo_itens.map(item => (
                     <div key={item.id} className="px-5 py-2.5 flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-white">{item.group_name || item.group_id}</p>
+                        <p className="text-sm text-foreground">{item.group_name || item.group_id}</p>
                         <p className="text-xs text-muted mt-0.5">{item.instancia} · {fmt(item.send_at)}</p>
                         {item.erro && <p className="text-xs text-red-400 mt-0.5">{item.erro}</p>}
                       </div>

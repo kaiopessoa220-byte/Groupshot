@@ -141,7 +141,7 @@ export default function Contas() {
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold text-white tracking-tight">Contas</h1>
+        <h1 className="text-2xl font-semibold text-foreground tracking-tight">Contas</h1>
         <div className="flex items-center gap-2">
           <button onClick={load} className="btn-secondary flex items-center gap-2">
             <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -172,7 +172,7 @@ export default function Contas() {
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
-              tab === t.key ? 'border-accent text-accent' : 'border-transparent text-muted hover:text-white'
+              tab === t.key ? 'border-accent text-accent' : 'border-transparent text-muted hover:text-foreground'
             }`}
           >
             {t.label}
@@ -200,7 +200,7 @@ export default function Contas() {
       {/* Grid */}
       {filtered.length === 0 ? (
         <div className="bg-card border border-border rounded-xl px-6 py-16 text-center">
-          <p className="text-sm font-medium text-white mb-1">Nenhuma instância</p>
+          <p className="text-sm font-medium text-foreground mb-1">Nenhuma instância</p>
           <p className="text-xs text-muted">Configure instâncias na Evolution API.</p>
         </div>
       ) : (
@@ -225,13 +225,13 @@ export default function Contas() {
                     onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                   />
                 ) : (
-                  <div className="w-12 h-12 rounded-xl bg-surface-2 border border-border flex items-center justify-center flex-shrink-0 text-sm font-bold text-white">
+                  <div className="w-12 h-12 rounded-xl bg-surface-2 border border-border flex items-center justify-center flex-shrink-0 text-sm font-bold text-foreground">
                     {inst.name.slice(0, 2).toUpperCase()}
                   </div>
                 )}
 
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white truncate mb-1">{inst.name}</p>
+                  <p className="text-sm font-semibold text-foreground truncate mb-1">{inst.name}</p>
                   <div className="flex items-center gap-1.5">
                     {isOpen ? (
                       <>
@@ -320,13 +320,13 @@ export default function Contas() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <p className="text-base font-semibold text-white mb-1">Conectado!</p>
+                <p className="text-base font-semibold text-foreground mb-1">Conectado!</p>
                 <p className="text-sm text-muted mb-5">{qrInstance} está online agora.</p>
                 <button onClick={closeQR} className="btn-primary w-full py-2.5">Fechar</button>
               </>
             ) : (
               <>
-                <p className="text-base font-semibold text-white mb-1">Conectar {qrInstance}</p>
+                <p className="text-base font-semibold text-foreground mb-1">Conectar {qrInstance}</p>
                 <p className="text-xs text-muted mb-5">Abra o WhatsApp → Dispositivos conectados → Conectar dispositivo</p>
                 <div className="flex items-center justify-center mb-5" style={{ minHeight: 220 }}>
                   {qrLoading ? (

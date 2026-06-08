@@ -2,43 +2,77 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Color tokens ───────────────────────────────────────── */
+:root {
+  --c-bg:         #0a0a0a;
+  --c-surface:    #111111;
+  --c-surface-2:  #161616;
+  --c-card:       #1a1a1a;
+  --c-card-hover: #1f1f1f;
+  --c-border:     #242424;
+  --c-border-2:   #2e2e2e;
+  --c-fg:         #ffffff;
+  --c-muted:      #71717a;
+  --c-secondary:  #a1a1aa;
+}
+
+html.light {
+  --c-bg:         #f4f4f5;
+  --c-surface:    #ffffff;
+  --c-surface-2:  #f0f0f0;
+  --c-card:       #ffffff;
+  --c-card-hover: #f4f4f5;
+  --c-border:     #e4e4e7;
+  --c-border-2:   #d4d4d8;
+  --c-fg:         #09090b;
+  --c-muted:      #71717a;
+  --c-secondary:  #52525b;
+}
+
+/* ── Base ───────────────────────────────────────────────── */
 @layer base {
   * { box-sizing: border-box; }
 
   html { font-size: 15px; }
 
   body {
-    background-color: #0a0a0a;
-    color: #e4e4e7;
+    background-color: var(--c-bg);
+    color: var(--c-fg);
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     margin: 0;
     padding: 0;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.2s, color 0.2s;
   }
 
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #333; border-radius: 99px; }
+  ::-webkit-scrollbar-thumb { background: var(--c-border-2); border-radius: 99px; }
 
   input[type="datetime-local"]::-webkit-calendar-picker-indicator {
     filter: invert(0.5);
     cursor: pointer;
   }
+
+  html.light input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.3);
+  }
 }
 
+/* ── Components ─────────────────────────────────────────── */
 @layer components {
   .btn-primary {
     @apply px-4 py-2 bg-accent hover:bg-accent-hover text-black font-semibold text-sm rounded-lg transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed;
   }
   .btn-secondary {
-    @apply px-4 py-2 bg-card border border-border hover:border-border-2 hover:bg-card-hover text-secondary hover:text-white font-medium text-sm rounded-lg transition-all duration-150;
+    @apply px-4 py-2 bg-card border border-border hover:border-border-2 hover:bg-card-hover text-secondary hover:text-foreground font-medium text-sm rounded-lg transition-all duration-150;
   }
   .btn-ghost {
-    @apply px-3 py-1.5 text-muted hover:text-white text-sm font-medium transition-colors duration-150;
+    @apply px-3 py-1.5 text-muted hover:text-foreground text-sm font-medium transition-colors duration-150;
   }
   .input {
-    @apply w-full bg-surface-2 border border-border rounded-lg px-3 py-2.5 text-sm text-white placeholder-muted focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/20 transition-all duration-150;
+    @apply w-full bg-surface-2 border border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder-muted focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/20 transition-all duration-150;
   }
   .card {
     @apply bg-card border border-border rounded-xl shadow-card;
@@ -47,7 +81,7 @@
     @apply inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium;
   }
   .tab-active {
-    @apply border-b-2 border-accent text-white font-medium;
+    @apply border-b-2 border-accent text-foreground font-medium;
   }
   .tab-inactive {
     @apply border-b-2 border-transparent text-muted hover:text-secondary transition-colors;
