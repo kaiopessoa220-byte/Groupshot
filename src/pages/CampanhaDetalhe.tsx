@@ -179,6 +179,8 @@ export default function CampanhaDetalhe() {
 
   // Grupos tab profile pictures
   const [groupPics, setGroupPics] = useState<Record<string, string | null>>({})
+  // Grupos tab participant counts
+  const [groupSizes, setGroupSizes] = useState<Record<string, number>>({})
 
   // Criar Grupos modal
   const [showCriarGrupos, setShowCriarGrupos] = useState(false)
@@ -254,7 +256,7 @@ export default function CampanhaDetalhe() {
     })
   }, [showAddGrupos, allInstances])
 
-  // Load group profile pictures when grupos tab opens
+  // Load group profile pictures and participant counts when grupos tab opens
   useEffect(() => {
     if (tab !== 'grupos' || !campanha) return
     for (const g of campanha.campanha_grupos) {
@@ -262,6 +264,19 @@ export default function CampanhaDetalhe() {
       fetchProfilePicture(g.instancia, g.group_id)
         .then(url => setGroupPics(prev => ({ ...prev, [g.group_id]: url })))
         .catch(() => setGroupPics(prev => ({ ...prev, [g.group_id]: null })))
+    }
+    // Fetch sizes grouped by instance to avoid N calls
+    const instancesNeeded = [...new Set(campanha.campanha_grupos.map(g => g.instancia))]
+    for (const inst of instancesNeeded) {
+      fetchGroups(inst)
+        .then(gs => {
+          setGroupSizes(prev => {
+            const next = { ...prev }
+            for (const g of gs) if (g.size != null) next[g.id] = g.size
+            return next
+          })
+        })
+        .catch(() => {})
     }
   }, [tab, campanha])
 
@@ -700,6 +715,12 @@ export default function CampanhaDetalhe() {
                       {grupo.group_name}
                     </p>
                     <p className="text-xs text-muted mt-0.5">{grupo.instancia}</p>
+                    {groupSizes[grupo.group_id] != null && (
+                      <p className="text-xs text-muted mt-1 flex items-center gap-1">
+                        <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        {groupSizes[grupo.group_id]} participantes
+                      </p>
+                    )}
                     <button
                       onClick={() => handleRemoveGrupo(grupo)}
                       className="absolute top-2 right-2 p-1 text-muted hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 rounded"
