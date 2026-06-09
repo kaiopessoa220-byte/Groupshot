@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 48" fill="none">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#16a34a"/>
+      <stop offset="100%" stop-color="#4ade80"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Bullet icon — rotated -38deg, centered at (26,24) -->
+  <g transform="translate(26,24) rotate(-38)">
+    <!-- Speed lines (left) -->
+    <line x1="-28" y1="-5" x2="-10" y2="-5" stroke="url(#g)" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="-24" y1="0"  x2="-10" y2="0"  stroke="url(#g)" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="-28" y1="5"  x2="-10" y2="5"  stroke="url(#g)" stroke-width="2.2" stroke-linecap="round"/>
+    <!-- Bullet outer shell -->
+    <path d="M-10,-13 L10,-13 Q26,-13 26,0 Q26,13 10,13 L-10,13 Z"
+          stroke="url(#g)" stroke-width="2.4" stroke-linejoin="round"/>
+    <!-- Bullet inner compartment -->
+    <path d="M-10,-8 L8,-8 Q18,-8 18,0 Q18,8 8,8 L-10,8 Z"
+          stroke="url(#g)" stroke-width="1.8" stroke-linejoin="round"/>
+  </g>
+
+  <!-- "group" in currentColor (adapts dark/light), "shot" in green gradient -->
+  <text font-family="'Inter','Arial Black',Arial,sans-serif" font-weight="800" font-size="21" y="31" x="58">
+    <tspan fill="currentColor">group</tspan><tspan fill="url(#g)">shot</tspan>
+  </text>
+</svg>

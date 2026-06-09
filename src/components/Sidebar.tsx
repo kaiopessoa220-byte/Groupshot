@@ -36,15 +36,8 @@ export default function Sidebar() {
   return (
     <aside className="w-[220px] min-h-screen bg-surface border-r border-border flex flex-col flex-shrink-0">
       {/* Logo */}
-      <div className="px-5 py-5">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-accent flex items-center justify-center flex-shrink-0">
-            <svg width="13" height="13" fill="none" stroke="#000" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            </svg>
-          </div>
-          <span className="font-semibold text-foreground text-[15px] tracking-tight">GroupShot</span>
-        </div>
+      <div className="px-4 py-4">
+        <img src="/logo.svg" alt="GroupShot" className="h-9 w-auto" style={{ color: 'var(--c-fg)' }} />
       </div>
 
       {/* Divider */}
