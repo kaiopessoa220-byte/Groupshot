@@ -1,27 +1,50 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 48" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 178 46" fill="none">
   <defs>
-    <linearGradient id="g" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#16a34a"/>
+    <linearGradient id="g" x1="2" y1="46" x2="56" y2="4" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#15803d"/>
       <stop offset="100%" stop-color="#4ade80"/>
     </linearGradient>
   </defs>
 
-  <!-- Bullet icon — rotated -38deg, centered at (26,24) -->
-  <g transform="translate(26,24) rotate(-38)">
-    <!-- Speed lines (left) -->
-    <line x1="-28" y1="-5" x2="-10" y2="-5" stroke="url(#g)" stroke-width="2.2" stroke-linecap="round"/>
-    <line x1="-24" y1="0"  x2="-10" y2="0"  stroke="url(#g)" stroke-width="2.2" stroke-linecap="round"/>
-    <line x1="-28" y1="5"  x2="-10" y2="5"  stroke="url(#g)" stroke-width="2.2" stroke-linecap="round"/>
-    <!-- Bullet outer shell -->
-    <path d="M-10,-13 L10,-13 Q26,-13 26,0 Q26,13 10,13 L-10,13 Z"
-          stroke="url(#g)" stroke-width="2.4" stroke-linejoin="round"/>
-    <!-- Bullet inner compartment -->
-    <path d="M-10,-8 L8,-8 Q18,-8 18,0 Q18,8 8,8 L-10,8 Z"
-          stroke="url(#g)" stroke-width="1.8" stroke-linejoin="round"/>
+  <!-- Bullet icon: centered at (34,19), tilted -38deg -->
+  <g transform="translate(34,19) rotate(-38)">
+
+    <!-- Speed lines (3 parallel, behind the bullet) -->
+    <line x1="-37" y1="-6.5" x2="-24" y2="-6.5" stroke="url(#g)" stroke-width="2.3" stroke-linecap="round"/>
+    <line x1="-33" y1="0"    x2="-24" y2="0"    stroke="url(#g)" stroke-width="2.3" stroke-linecap="round"/>
+    <line x1="-37" y1="6.5"  x2="-24" y2="6.5"  stroke="url(#g)" stroke-width="2.3" stroke-linecap="round"/>
+
+    <!-- Outer bullet shell (rounded rect + pointed nose) -->
+    <path d="M -21,-12
+             L  9,-12
+             Q  24,-12  24,0
+             Q  24,12   9,12
+             L -21,12
+             Q -24,12  -24,0
+             Q -24,-12 -21,-12
+             Z"
+          stroke="url(#g)" stroke-width="2.5" stroke-linejoin="round"/>
+
+    <!-- Inner hollow compartment -->
+    <path d="M -17,-7
+             L  6,-7
+             Q  16,-7  16,0
+             Q  16,7   6,7
+             L -17,7
+             Q -19,7  -19,0
+             Q -19,-7 -17,-7
+             Z"
+          stroke="url(#g)" stroke-width="2" stroke-linejoin="round"/>
   </g>
 
-  <!-- "group" in currentColor (adapts dark/light), "shot" in green gradient -->
-  <text font-family="'Inter','Arial Black',Arial,sans-serif" font-weight="800" font-size="21" y="31" x="58">
+  <!-- "group" in currentColor (white dark / dark light mode), "shot" in green -->
+  <text
+    x="62" y="31"
+    font-family="'Inter','Arial Black','Helvetica Neue',Arial,sans-serif"
+    font-weight="900"
+    font-size="21"
+    letter-spacing="-0.5"
+  >
     <tspan fill="currentColor">group</tspan><tspan fill="url(#g)">shot</tspan>
   </text>
 </svg>
