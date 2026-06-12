@@ -429,29 +429,33 @@ serve(async (req: Request) => {
       .single()
     if (dErr || !disparo) return err('Erro ao salvar: ' + dErr?.message, 500)
 
-    // Build items: for each group, one item per block with proper staggering
-    // Map send_at -> bloco index so we can match after DB insert (no extra column needed)
+    // Build items with pre-computed bloco payloads stored alongside DB rows
+    // (avoids timestamp format mismatch between JS ISO and PostgreSQL output)
     let groupAccumulado = 0
-    const sendAtToBlocoIndex = new Map<string, number>()
-    const itens: Array<{ disparo_id: string; group_id: string; group_name: string; instancia: string; send_at: string; status: string }> = []
+    const itemPayloads: Array<{ dbRow: { disparo_id: string; group_id: string; group_name: string; instancia: string; send_at: string; status: string }; bloco: { mensagem: string; imageUrl: string; imageMimetype: string } }> = []
     for (let gi = 0; gi < targetGroups.length; gi++) {
       const g = targetGroups[gi]
       if (gi > 0) groupAccumulado += intervaloMin + Math.floor(Math.random() * (intervaloMax - intervaloMin + 1))
       const instancia = campanha.instancias[Math.floor(Math.random() * campanha.instancias.length)]
       for (let bi = 0; bi < blocos.length; bi++) {
         const sendAt = new Date(baseTime + groupAccumulado + bi * MSG_GAP).toISOString()
-        sendAtToBlocoIndex.set(`${g.group_id}|${sendAt}`, bi)
-        itens.push({ disparo_id: disparo.id, group_id: g.group_id, group_name: g.group_name, instancia, send_at: sendAt, status: 'pendente' })
+        itemPayloads.push({
+          dbRow: { disparo_id: disparo.id, group_id: g.group_id, group_name: g.group_name, instancia, send_at: sendAt, status: 'pendente' },
+          bloco: blocos[bi],
+        })
       }
     }
 
-    const { data: insertedItens, error: iErr } = await db.from('disparo_itens').insert(itens).select()
+    const { data: insertedItens, error: iErr } = await db.from('disparo_itens').insert(itemPayloads.map(x => x.dbRow)).select()
     if (iErr || !insertedItens) return err('Erro ao salvar itens: ' + iErr?.message, 500)
 
     if (N8N_DISPATCHER) {
+      // Normalize timestamps for matching (PostgreSQL may return +00:00 instead of Z)
+      const normalize = (ts: string) => new Date(ts).toISOString()
+      const payloadMap = new Map(itemPayloads.map(x => [`${x.dbRow.group_id}|${x.dbRow.send_at}`, x.bloco]))
       for (const item of insertedItens) {
-        const bi = sendAtToBlocoIndex.get(`${item.group_id}|${item.send_at}`) ?? 0
-        const bloco = blocos[bi]
+        const key = `${item.group_id}|${normalize(item.send_at)}`
+        const bloco = payloadMap.get(key) ?? blocos[0]
         fetch(N8N_DISPATCHER, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
