@@ -61,7 +61,14 @@ serve(async (req: Request) => {
       })
       const data = await res.json()
       const list = Array.isArray(data) ? data : (data.data ?? [])
-      return json(list)
+      // Normalize: Evolution API v2 may wrap data inside an `instance` sub-object
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const normalized = list.map((item: any) => ({
+        name: item.name ?? item.instance?.instanceName ?? item.instanceName ?? '',
+        connectionStatus: item.connectionStatus ?? item.instance?.connectionStatus ?? item.instance?.status ?? 'close',
+        ownerJid: item.ownerJid ?? item.instance?.ownerJid ?? item.instance?.owner ?? '',
+      }))
+      return json(normalized)
     } catch (e) {
       return err('Erro ao buscar instâncias: ' + (e as Error).message, 500)
     }

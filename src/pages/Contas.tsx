@@ -17,6 +17,7 @@ export default function Contas() {
   const [qrLoading, setQrLoading] = useState(false)
   const [qrConnected, setQrConnected] = useState(false)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const qrRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const [showNova, setShowNova] = useState(false)
   const [novoNome, setNovoNome] = useState('')
@@ -54,6 +55,7 @@ export default function Contas() {
           setQrConnected(true)
           setInstances(list)
           clearInterval(pollRef.current!)
+          if (qrRefreshRef.current) clearInterval(qrRefreshRef.current)
         }
       } catch { /* ignora */ }
     }, 4000)
@@ -73,6 +75,14 @@ export default function Contas() {
     } finally {
       setQrLoading(false)
     }
+    // Auto-refresh QR every 15s (WhatsApp QR codes expire in ~20s)
+    if (qrRefreshRef.current) clearInterval(qrRefreshRef.current)
+    qrRefreshRef.current = setInterval(async () => {
+      try {
+        const data = await fetchQRCode(name)
+        if (data.base64) setQrBase64(data.base64)
+      } catch { /* ignora */ }
+    }, 15000)
   }
 
   const closeQR = () => {
@@ -80,6 +90,7 @@ export default function Contas() {
     setQrBase64(null)
     setQrConnected(false)
     if (pollRef.current) clearInterval(pollRef.current)
+    if (qrRefreshRef.current) clearInterval(qrRefreshRef.current)
   }
 
   const handleDeleteInstancia = async (e: React.MouseEvent, name: string) => {
