@@ -526,45 +526,45 @@ serve(async (req: Request) => {
         let res: Response
         if (action === 'trocar-nome') {
           res = await fetch(`${EVOLUTION_URL}/group/updateGroupSubject/${encodeURIComponent(instance)}`, {
-            method: 'PUT',
+            method: 'POST',
             headers: evolutionHeaders(),
             body: JSON.stringify({ groupJid: groupId, subject: content?.value }),
           })
         } else if (action === 'trocar-descricao') {
           res = await fetch(`${EVOLUTION_URL}/group/updateGroupDescription/${encodeURIComponent(instance)}`, {
-            method: 'PUT',
+            method: 'POST',
             headers: evolutionHeaders(),
             body: JSON.stringify({ groupJid: groupId, description: content?.value }),
           })
         } else if (action === 'trocar-imagem') {
           res = await fetch(`${EVOLUTION_URL}/group/updateGroupPicture/${encodeURIComponent(instance)}`, {
-            method: 'PUT',
+            method: 'POST',
             headers: evolutionHeaders(),
             body: JSON.stringify({ groupJid: groupId, image: content?.image }),
           })
         } else if (action === 'fechar-grupos') {
           res = await fetch(`${EVOLUTION_URL}/group/updateSetting/${encodeURIComponent(instance)}`, {
-            method: 'PUT',
+            method: 'POST',
             headers: evolutionHeaders(),
             body: JSON.stringify({ groupJid: groupId, action: 'announcement' }),
           })
         } else if (action === 'abrir-grupos') {
           res = await fetch(`${EVOLUTION_URL}/group/updateSetting/${encodeURIComponent(instance)}`, {
-            method: 'PUT',
+            method: 'POST',
             headers: evolutionHeaders(),
             body: JSON.stringify({ groupJid: groupId, action: 'not_announcement' }),
           })
         } else if (action === 'trocar-configuracao') {
           const settingAction = content?.onlyAdmins ? 'announcement' : 'not_announcement'
           res = await fetch(`${EVOLUTION_URL}/group/updateSetting/${encodeURIComponent(instance)}`, {
-            method: 'PUT',
+            method: 'POST',
             headers: evolutionHeaders(),
             body: JSON.stringify({ groupJid: groupId, action: settingAction }),
           })
         } else if (action === 'add-admins') {
           const phones = (content?.phones as string[]) ?? []
           res = await fetch(`${EVOLUTION_URL}/group/updateParticipant/${encodeURIComponent(instance)}`, {
-            method: 'PATCH',
+            method: 'POST',
             headers: evolutionHeaders(),
             body: JSON.stringify({ groupJid: groupId, action: 'promote', participants: phones }),
           })
