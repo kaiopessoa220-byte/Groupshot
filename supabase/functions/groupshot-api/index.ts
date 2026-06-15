@@ -576,7 +576,8 @@ serve(async (req: Request) => {
           results.push({ groupId, ok: false, error: 'Ação desconhecida: ' + action })
           continue
         }
-        results.push({ groupId, ok: res.ok, error: res.ok ? undefined : `HTTP ${res.status}` })
+        const errBody = res.ok ? undefined : await res.text().catch(() => '')
+        results.push({ groupId, ok: res.ok, error: res.ok ? undefined : `HTTP ${res.status}: ${errBody}` })
       } catch (e) {
         results.push({ groupId, ok: false, error: (e as Error).message })
       }
