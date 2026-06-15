@@ -525,19 +525,19 @@ serve(async (req: Request) => {
       try {
         let res: Response
         if (action === 'trocar-nome') {
-          res = await fetch(`${EVOLUTION_URL}/group/updateGroupSubject/${encodeURIComponent(instance)}`, {
+          res = await fetch(`${EVOLUTION_URL}/group/subject/${encodeURIComponent(instance)}`, {
             method: 'PUT',
             headers: evolutionHeaders(),
             body: JSON.stringify({ groupJid: groupId, subject: content?.value }),
           })
         } else if (action === 'trocar-descricao') {
-          res = await fetch(`${EVOLUTION_URL}/group/updateGroupDescription/${encodeURIComponent(instance)}`, {
+          res = await fetch(`${EVOLUTION_URL}/group/description/${encodeURIComponent(instance)}`, {
             method: 'PUT',
             headers: evolutionHeaders(),
             body: JSON.stringify({ groupJid: groupId, description: content?.value }),
           })
         } else if (action === 'trocar-imagem') {
-          res = await fetch(`${EVOLUTION_URL}/group/updateGroupPicture/${encodeURIComponent(instance)}`, {
+          res = await fetch(`${EVOLUTION_URL}/group/picture/${encodeURIComponent(instance)}`, {
             method: 'PUT',
             headers: evolutionHeaders(),
             body: JSON.stringify({ groupJid: groupId, image: content?.image }),
