@@ -1059,7 +1059,7 @@ export default function CampanhaDetalhe() {
                 const mentionAll = (wizardContent as { mentionAll?: boolean }).mentionAll ?? false
                 const tempMessages = (wizardContent as { tempMessages?: boolean }).tempMessages ?? false
                 const curMin = (wizardContent as { intervaloMin?: number }).intervaloMin ?? 40
-                const blocos = (wizardContent as { blocos?: Array<{ mensagem: string; imagePreview?: string }> }).blocos ?? []
+                const blocos = (wizardContent as { blocos?: Array<{ mensagem: string; imagePreview?: string; imageFile?: File }> }).blocos ?? []
                 const now = new Date()
                 const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
                 const intervalOpts = [
@@ -1108,7 +1108,7 @@ export default function CampanhaDetalhe() {
                         >
                           <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                         </button>
-                        <input ref={wizardFileRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) { setWizardContent(prev => ({ ...prev, imageFile: f })); setImagePreview(URL.createObjectURL(f)) } }} />
+                        <input ref={wizardFileRef} type="file" accept="image/*,video/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) { setWizardContent(prev => ({ ...prev, imageFile: f })); setImagePreview(URL.createObjectURL(f)) } }} />
                       </div>
                       {/* Chat preview body */}
                       <div className="min-h-56 flex flex-col justify-end gap-1.5 p-3 overflow-y-auto max-h-80" style={{ background: '#111b21', backgroundImage: 'url(/wa-bg.svg)', backgroundSize: '480px 480px' }}>
@@ -1120,7 +1120,7 @@ export default function CampanhaDetalhe() {
                           <>
                             {blocos.map((b, i) => (
                               <div key={i} className="self-end max-w-[85%] rounded-xl rounded-tr-sm px-2.5 pt-2 pb-1.5 group relative" style={{ background: '#005c4b' }}>
-                                {b.imagePreview && <img src={b.imagePreview} alt="" className="rounded-lg mb-1.5 w-full object-cover max-h-24" />}
+                                {b.imagePreview && (b.imageFile?.type.startsWith('video/') ? <video src={b.imagePreview} className="rounded-lg mb-1.5 w-full max-h-24" controls /> : <img src={b.imagePreview} alt="" className="rounded-lg mb-1.5 w-full object-cover max-h-24" />)}
                                 {b.mensagem && <p className="text-white text-[11px] leading-[1.4] whitespace-pre-wrap break-words">{b.mensagem}</p>}
                                 {mentionAll && <p className="text-[10px] mt-0.5" style={{ color: '#53bdeb' }}>@todos</p>}
                                 <div className="flex items-center justify-end gap-1 mt-1">
@@ -1139,7 +1139,7 @@ export default function CampanhaDetalhe() {
                             ))}
                             {(msg || imagePreview) && (
                               <div className="self-end max-w-[85%] rounded-xl rounded-tr-sm px-2.5 pt-2 pb-1.5" style={{ background: '#005c4b' }}>
-                                {imagePreview && <img src={imagePreview} alt="" className="rounded-lg mb-1.5 w-full object-cover max-h-24" />}
+                                {imagePreview && ((wizardContent as { imageFile?: File }).imageFile?.type.startsWith('video/') ? <video src={imagePreview} className="rounded-lg mb-1.5 w-full max-h-24" controls /> : <img src={imagePreview} alt="" className="rounded-lg mb-1.5 w-full object-cover max-h-24" />)}
                                 {msg && <p className="text-white text-[11px] leading-[1.4] whitespace-pre-wrap break-words">{msg}</p>}
                                 {mentionAll && <p className="text-[10px] mt-0.5" style={{ color: '#53bdeb' }}>@todos</p>}
                                 <div className="flex items-center justify-end gap-1 mt-1">
