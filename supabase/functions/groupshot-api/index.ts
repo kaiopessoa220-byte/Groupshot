@@ -450,18 +450,17 @@ serve(async (req: Request) => {
     if (iErr || !insertedItens) return err('Erro ao salvar itens: ' + iErr?.message, 500)
 
     if (N8N_DISPATCHER) {
-      // Normalize timestamps for matching (PostgreSQL may return +00:00 instead of Z)
       const normalize = (ts: string) => new Date(ts).toISOString()
       const payloadMap = new Map(itemPayloads.map(x => [`${x.dbRow.group_id}|${x.dbRow.send_at}`, x.bloco]))
-      for (const item of insertedItens) {
+      await Promise.allSettled(insertedItens.map(item => {
         const key = `${item.group_id}|${normalize(item.send_at)}`
         const bloco = payloadMap.get(key) ?? blocos[0]
-        fetch(N8N_DISPATCHER, {
+        return fetch(N8N_DISPATCHER, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ groupId: item.group_id, instancia: item.instancia, sendAt: item.send_at, message: bloco.mensagem, imageUrl: bloco.imageUrl, imageMimetype: bloco.imageMimetype ?? 'image/jpeg', mentionAll, disparoItemId: item.id }),
-        }).catch(() => {})
-      }
+        })
+      }))
     }
     return json({ id: disparo.id, itens: targetGroups.length }, 201)
   }
