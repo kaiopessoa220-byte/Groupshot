@@ -464,7 +464,7 @@ serve(async (req: Request) => {
         await new Promise(r => setTimeout(r, 500))
       }
     }
-    return json({ id: disparo.id, itens: targetGroups.length }, 201)
+    return json({ id: disparo.id, itens: targetGroups.length, _debug: { blocos: blocos.length, insertedItems: insertedItens.length } }, 201)
   }
 
   // POST /group/create-batch
