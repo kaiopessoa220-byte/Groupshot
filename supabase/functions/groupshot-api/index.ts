@@ -450,17 +450,16 @@ serve(async (req: Request) => {
     if (iErr || !insertedItens) return err('Erro ao salvar itens: ' + iErr?.message, 500)
 
     if (N8N_DISPATCHER) {
-      const normalize = (ts: string) => new Date(ts).toISOString()
-      const payloadMap = new Map(itemPayloads.map(x => [`${x.dbRow.group_id}|${x.dbRow.send_at}`, x.bloco]))
-      for (const item of insertedItens) {
-        const key = `${item.group_id}|${normalize(item.send_at)}`
-        const bloco = payloadMap.get(key) ?? blocos[0]
+      // Use index-based matching: bulk insert preserves insertion order in returned rows
+      for (let i = 0; i < itemPayloads.length; i++) {
+        const bloco = itemPayloads[i].bloco
+        const item = insertedItens[i]
+        if (!item) continue
         await fetch(N8N_DISPATCHER, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ groupId: item.group_id, instancia: item.instancia, sendAt: item.send_at, message: bloco.mensagem, imageUrl: bloco.imageUrl, imageMimetype: bloco.imageMimetype ?? 'image/jpeg', mentionAll, disparoItemId: item.id }),
         }).catch(() => {})
-        // Brief pause so N8N finishes accepting each webhook before the next arrives
         await new Promise(r => setTimeout(r, 500))
       }
     }
