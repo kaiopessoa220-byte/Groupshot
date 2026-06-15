@@ -525,22 +525,22 @@ serve(async (req: Request) => {
       try {
         let res: Response
         if (action === 'trocar-nome') {
-          res = await fetch(`${EVOLUTION_URL}/group/subject/${encodeURIComponent(instance)}`, {
+          res = await fetch(`${EVOLUTION_URL}/group/updateGroupSubject/${encodeURIComponent(instance)}`, {
             method: 'PUT',
             headers: evolutionHeaders(),
-            body: JSON.stringify({ id: groupId, subject: content?.value }),
+            body: JSON.stringify({ groupJid: groupId, subject: content?.value }),
           })
         } else if (action === 'trocar-descricao') {
-          res = await fetch(`${EVOLUTION_URL}/group/description/${encodeURIComponent(instance)}`, {
+          res = await fetch(`${EVOLUTION_URL}/group/updateGroupDescription/${encodeURIComponent(instance)}`, {
             method: 'PUT',
             headers: evolutionHeaders(),
-            body: JSON.stringify({ id: groupId, description: content?.value }),
+            body: JSON.stringify({ groupJid: groupId, description: content?.value }),
           })
         } else if (action === 'trocar-imagem') {
-          res = await fetch(`${EVOLUTION_URL}/group/picture/${encodeURIComponent(instance)}`, {
+          res = await fetch(`${EVOLUTION_URL}/group/updateGroupPicture/${encodeURIComponent(instance)}`, {
             method: 'PUT',
             headers: evolutionHeaders(),
-            body: JSON.stringify({ id: groupId, image: content?.image }),
+            body: JSON.stringify({ groupJid: groupId, image: content?.image }),
           })
         } else if (action === 'fechar-grupos') {
           res = await fetch(`${EVOLUTION_URL}/group/update-setting/${encodeURIComponent(instance)}`, {
