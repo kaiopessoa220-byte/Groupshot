@@ -1102,8 +1102,8 @@ export default function CampanhaDetalhe() {
                         <span className="text-xs font-medium text-secondary">Editor de mensagens</span>
                         <button
                           type="button"
-                          onClick={() => { setWizardContent(prev => ({ ...prev, mensagem: '', imageFile: undefined })); setImagePreview(null) }}
-                          title="Limpar"
+                          onClick={() => { setWizardContent(prev => ({ ...prev, mensagem: '', imageFile: undefined, blocos: [] })); setImagePreview(null) }}
+                          title="Limpar tudo"
                           className="text-muted hover:text-foreground transition-colors"
                         >
                           <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -1119,7 +1119,20 @@ export default function CampanhaDetalhe() {
                         ) : (
                           <>
                             {blocos.map((b, i) => (
-                              <div key={i} className="self-end max-w-[85%] rounded-xl rounded-tr-sm px-2.5 pt-2 pb-1.5 group relative" style={{ background: '#005c4b' }}>
+                              <div
+                                key={i}
+                                className="self-end max-w-[85%] rounded-xl rounded-tr-sm px-2.5 pt-2 pb-1.5 group relative cursor-pointer"
+                                style={{ background: '#005c4b' }}
+                                onClick={() => {
+                                  setWizardContent(prev => ({
+                                    ...prev,
+                                    mensagem: b.mensagem,
+                                    imageFile: b.imageFile,
+                                    blocos: ((prev as { blocos?: Array<{ mensagem: string; imageFile?: File; imagePreview?: string }> }).blocos ?? []).filter((_, idx) => idx !== i),
+                                  }))
+                                  setImagePreview(b.imagePreview ?? null)
+                                }}
+                              >
                                 {b.imagePreview && (b.imageFile?.type.startsWith('video/') ? <video src={b.imagePreview} className="rounded-lg mb-1.5 w-full max-h-24" controls /> : <img src={b.imagePreview} alt="" className="rounded-lg mb-1.5 w-full object-cover max-h-24" />)}
                                 {b.mensagem && <p className="text-white text-[11px] leading-[1.4] whitespace-pre-wrap break-words">{b.mensagem}</p>}
                                 {mentionAll && <p className="text-[10px] mt-0.5" style={{ color: '#53bdeb' }}>@todos</p>}
@@ -1127,14 +1140,13 @@ export default function CampanhaDetalhe() {
                                   <span className="text-[9px]" style={{ color: '#8696a0' }}>{timeStr}</span>
                                   <svg width="14" height="8" viewBox="0 0 16 11" fill="none"><path d="M11 1L5.5 6.5L3 4" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M15 1L9.5 6.5L7 4" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                                 </div>
-                                <button
-                                  type="button"
-                                  onClick={() => setWizardContent(prev => ({
-                                    ...prev,
-                                    blocos: ((prev as { blocos?: unknown[] }).blocos ?? []).filter((_, idx) => idx !== i)
-                                  }))}
-                                  className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white items-center justify-center text-[9px] font-bold hidden group-hover:flex"
-                                >×</button>
+                                <div className="absolute -top-1.5 -right-1.5 hidden group-hover:flex gap-0.5">
+                                  <button
+                                    type="button"
+                                    onClick={e => { e.stopPropagation(); setWizardContent(prev => ({ ...prev, blocos: ((prev as { blocos?: unknown[] }).blocos ?? []).filter((_, idx) => idx !== i) })) }}
+                                    className="w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center text-[9px] font-bold"
+                                  >×</button>
+                                </div>
                               </div>
                             ))}
                             {(msg || imagePreview) && (
