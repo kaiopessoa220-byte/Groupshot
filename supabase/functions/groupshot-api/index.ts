@@ -116,7 +116,9 @@ serve(async (req: Request) => {
         method: 'DELETE',
         headers: evolutionHeaders(),
       })
-      if (!res.ok) return err('Erro ao excluir instância: ' + res.status, 500)
+      // Evolution API returns 404 when the instance no longer exists on its side —
+      // treat that as a successful deletion since the desired end state is already true
+      if (!res.ok && res.status !== 404) return err('Erro ao excluir instância: ' + res.status, 500)
       return json({ ok: true })
     } catch (e) {
       return err('Erro ao excluir instância: ' + (e as Error).message, 500)
