@@ -1745,11 +1745,24 @@ export default function CampanhaDetalhe() {
                         type="checkbox"
                         checked={isSelected}
                         disabled={jaAdicionado}
-                        onChange={() => setSelectedGroups(prev =>
-                          isSelected
-                            ? prev.filter(sg => !(sg.id === g.id && sg.instancia === instancia))
-                            : [...prev, { id: g.id, instancia }]
-                        )}
+                        onChange={() => {
+                          if (g.isCommunity) {
+                            // Select/deselect community + all its sub-groups
+                            const subGroups = allFlatGroups.filter(ag => ag.group.linkedParent === g.id && ag.instancia === instancia)
+                            if (isSelected) {
+                              setSelectedGroups(prev => prev.filter(sg => !(sg.id === g.id && sg.instancia === instancia) && !subGroups.some(sub => sub.group.id === sg.id && sub.instancia === sg.instancia)))
+                            } else {
+                              const toAdd = [{ id: g.id, instancia }, ...subGroups.filter(sub => !campanha.campanha_grupos.some(cg => cg.group_id === sub.group.id)).map(sub => ({ id: sub.group.id, instancia: sub.instancia }))]
+                              setSelectedGroups(prev => [...prev.filter(sg => !toAdd.some(a => a.id === sg.id && a.instancia === sg.instancia)), ...toAdd])
+                            }
+                          } else {
+                            setSelectedGroups(prev =>
+                              isSelected
+                                ? prev.filter(sg => !(sg.id === g.id && sg.instancia === instancia))
+                                : [...prev, { id: g.id, instancia }]
+                            )
+                          }
+                        }}
                         className="accent-accent w-4 h-4 flex-shrink-0"
                       />
                       <GroupAvatar pic={null} name={g.subject} size={7} isCommunity={!!g.isCommunity} />
