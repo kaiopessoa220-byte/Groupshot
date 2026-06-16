@@ -461,6 +461,7 @@ export default function CampanhaDetalhe() {
     ([inst, { groups }]) => groups.map(g => ({ group: g, instancia: inst }))
   )
   const filteredGroups = allFlatGroups.filter(ag => {
+    if (ag.group.linkedParent) return false // sub-grupos aparecem só via seleção da comunidade
     const matchSearch = ag.group.subject.toLowerCase().includes(groupSearch.toLowerCase())
     const matchInst = filterInst === 'todas' || ag.instancia === filterInst
     return matchSearch && matchInst
