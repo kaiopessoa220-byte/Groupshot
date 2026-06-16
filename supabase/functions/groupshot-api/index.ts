@@ -15,8 +15,18 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
 
+// Minimum gap enforced server-side between dispatch sends, regardless of client input
+const MIN_INTERVALO_MS = 10_000
+// Only images uploaded through our own Supabase Storage bucket may be forwarded to the dispatcher
+const ALLOWED_IMAGE_PREFIX = `${SUPABASE_URL}/storage/v1/object/public/sendflow/`
+
 function supabaseAdmin() {
   return createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+}
+
+function sanitizeImageUrl(imageUrl?: string): string {
+  if (!imageUrl) return ''
+  return imageUrl.startsWith(ALLOWED_IMAGE_PREFIX) ? imageUrl : ''
 }
 
 function evolutionHeaders() {
@@ -189,9 +199,10 @@ serve(async (req: Request) => {
     }
     try { body = await req.json() } catch { return err('JSON inválido') }
 
-    const { nome, mensagem, imageUrl, imageMimetype, mentionAll, agendadoPara, groupIds, instancias } = body
-    const intervaloMin = (body.intervaloMin ?? 40) * 1000
-    const intervaloMax = (body.intervaloMax ?? 60) * 1000
+    const { nome, mensagem, imageMimetype, mentionAll, agendadoPara, groupIds, instancias } = body
+    const imageUrl = sanitizeImageUrl(body.imageUrl)
+    const intervaloMin = Math.max((body.intervaloMin ?? 40) * 1000, MIN_INTERVALO_MS)
+    const intervaloMax = Math.max((body.intervaloMax ?? 60) * 1000, intervaloMin)
 
     if (!mensagem || !groupIds?.length || !instancias?.length) {
       return err('mensagem, groupIds e instancias são obrigatórios')
@@ -403,8 +414,8 @@ serve(async (req: Request) => {
 
     // Build blocos array — supports single message (legacy) or multi-block
     const blocos: Array<{ mensagem: string; imageUrl: string; imageMimetype: string }> = body.mensagens?.length
-      ? body.mensagens.map(b => ({ mensagem: b.mensagem, imageUrl: b.imageUrl ?? '', imageMimetype: b.imageMimetype ?? '' }))
-      : [{ mensagem: body.mensagem ?? '', imageUrl: body.imageUrl ?? '', imageMimetype: body.imageMimetype ?? '' }]
+      ? body.mensagens.map(b => ({ mensagem: b.mensagem, imageUrl: sanitizeImageUrl(b.imageUrl), imageMimetype: b.imageMimetype ?? '' }))
+      : [{ mensagem: body.mensagem ?? '', imageUrl: sanitizeImageUrl(body.imageUrl), imageMimetype: body.imageMimetype ?? '' }]
     if (!blocos[0].mensagem) return err('mensagem obrigatória')
 
     const db = supabaseAdmin()
@@ -419,8 +430,8 @@ serve(async (req: Request) => {
 
     const { mentionAll, agendadoPara } = body
     const baseTime = new Date(agendadoPara).getTime()
-    const intervaloMin = (body.intervaloMin ?? 40) * 1000
-    const intervaloMax = (body.intervaloMax ?? 60) * 1000
+    const intervaloMin = Math.max((body.intervaloMin ?? 40) * 1000, MIN_INTERVALO_MS)
+    const intervaloMax = Math.max((body.intervaloMax ?? 60) * 1000, intervaloMin)
     const MSG_GAP = 4000 // 4s between blocks for the same group
 
     const targetGroups = body.groupIds?.length
@@ -478,7 +489,7 @@ serve(async (req: Request) => {
         await new Promise(r => setTimeout(r, 500))
       }
     }
-    return json({ id: disparo.id, itens: targetGroups.length, _debug: { blocos: blocos.length, insertedItems: insertedItens.length } }, 201)
+    return json({ id: disparo.id, itens: targetGroups.length }, 201)
   }
 
   // POST /group/create-batch
@@ -583,10 +594,6 @@ serve(async (req: Request) => {
             headers: evolutionHeaders(),
             body: JSON.stringify({ groupJid: groupId, action: 'promote', participants: phones }),
           })
-        } else if (action === 'entrar-grupo') {
-          // No-op for now
-          results.push({ groupId, ok: true })
-          continue
         } else {
           results.push({ groupId, ok: false, error: 'Ação desconhecida: ' + action })
           continue

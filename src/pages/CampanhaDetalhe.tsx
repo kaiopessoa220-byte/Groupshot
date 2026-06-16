@@ -23,7 +23,6 @@ type ActionType =
   | 'trocar-configuracao'
   | 'fechar-grupos'
   | 'abrir-grupos'
-  | 'entrar-grupo'
   | 'add-admins'
 
 type WizardStep = 'acao' | 'contas' | 'grupos' | 'conteudo' | 'confirmar'
@@ -98,15 +97,6 @@ const ACTIONS: { key: ActionType; label: string; icon: React.ReactNode }[] = [
     icon: (
       <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
-      </svg>
-    ),
-  },
-  {
-    key: 'entrar-grupo',
-    label: 'Entrar no Grupo',
-    icon: (
-      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
       </svg>
     ),
   },
@@ -1403,7 +1393,7 @@ export default function CampanhaDetalhe() {
                 </div>
               )}
 
-              {(wizardAction === 'fechar-grupos' || wizardAction === 'abrir-grupos' || wizardAction === 'entrar-grupo') && (
+              {(wizardAction === 'fechar-grupos' || wizardAction === 'abrir-grupos') && (
                 <div className="bg-card border border-border rounded-xl px-5 py-5 flex items-start gap-3">
                   <svg width="16" height="16" fill="none" stroke="#f5c518" strokeWidth="2" viewBox="0 0 24 24" className="mt-0.5 flex-shrink-0">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1412,12 +1402,10 @@ export default function CampanhaDetalhe() {
                     <p className="text-sm font-medium text-foreground mb-1">
                       {wizardAction === 'fechar-grupos' && 'Fechar grupos'}
                       {wizardAction === 'abrir-grupos' && 'Abrir grupos'}
-                      {wizardAction === 'entrar-grupo' && 'Entrar nos grupos'}
                     </p>
                     <p className="text-xs text-muted">
                       {wizardAction === 'fechar-grupos' && 'Esta ação irá restringir o envio de mensagens apenas para administradores nos grupos selecionados.'}
                       {wizardAction === 'abrir-grupos' && 'Esta ação irá permitir que todos os participantes enviem mensagens nos grupos selecionados.'}
-                      {wizardAction === 'entrar-grupo' && 'As contas selecionadas irão entrar nos grupos selecionados.'}
                     </p>
                   </div>
                 </div>
