@@ -528,8 +528,8 @@ export default function CampanhaDetalhe() {
     try {
       await deleteCampanha(campanha.id)
       navigate('/campanhas')
-    } catch {
-      setError('Erro ao excluir campanha')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erro ao excluir campanha')
       setDeleting(false)
     }
   }

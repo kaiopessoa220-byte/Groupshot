@@ -360,7 +360,22 @@ serve(async (req: Request) => {
   // DELETE /campanhas/:id
   if (req.method === 'DELETE' && campanhaId) {
     const db = supabaseAdmin()
-    const { error } = await db.from('campanhas').delete().eq('id', campanhaId[1])
+    const cId = campanhaId[1]
+
+    const { data: disparosDaCampanha } = await db.from('disparos').select('id').eq('campanha_id', cId)
+    const disparoIds = (disparosDaCampanha ?? []).map((d: { id: string }) => d.id)
+    if (disparoIds.length) {
+      const { error: itensErr } = await db.from('disparo_itens').delete().in('disparo_id', disparoIds)
+      if (itensErr) return err('Erro ao excluir itens de disparo: ' + itensErr.message, 500)
+    }
+
+    const { error: disparosErr } = await db.from('disparos').delete().eq('campanha_id', cId)
+    if (disparosErr) return err('Erro ao excluir disparos: ' + disparosErr.message, 500)
+
+    const { error: gruposErr } = await db.from('campanha_grupos').delete().eq('campanha_id', cId)
+    if (gruposErr) return err('Erro ao excluir grupos da campanha: ' + gruposErr.message, 500)
+
+    const { error } = await db.from('campanhas').delete().eq('id', cId)
     if (error) return err('Erro: ' + error.message, 500)
     return json({ ok: true })
   }
