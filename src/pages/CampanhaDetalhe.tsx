@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
-  fetchCampanha, updateCampanha,
+  fetchCampanha, updateCampanha, deleteCampanha,
   fetchAtividades, dispararCampanha,
   fetchInstances, fetchGroups,
   addGruposToCampanha, removeGrupoDaCampanha,
@@ -160,6 +160,7 @@ export default function CampanhaDetalhe() {
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('visao-geral')
   const [error, setError] = useState('')
+  const [deleting, setDeleting] = useState(false)
 
   const [atividades, setAtividades] = useState<Disparo[]>([])
   const [loadingAtiv, setLoadingAtiv] = useState(false)
@@ -520,6 +521,19 @@ export default function CampanhaDetalhe() {
     if (idx > 0) setWizardStep(WIZARD_STEPS[idx - 1])
   }
 
+  const handleDeleteCampanha = async () => {
+    if (!campanha) return
+    if (!confirm(`Excluir a campanha "${campanha.nome}" e todos os seus grupos? Essa ação não pode ser desfeita.`)) return
+    setDeleting(true)
+    try {
+      await deleteCampanha(campanha.id)
+      navigate('/campanhas')
+    } catch {
+      setError('Erro ao excluir campanha')
+      setDeleting(false)
+    }
+  }
+
   return (
     <div className="p-8 max-w-7xl mx-auto w-full">
       {/* Header */}
@@ -537,10 +551,22 @@ export default function CampanhaDetalhe() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
           </svg>
         </div>
-        <div>
+        <div className="flex-1">
           <h1 className="text-lg font-semibold text-foreground leading-tight">{campanha.nome}</h1>
           <p className="text-xs text-muted">{campanha.campanha_grupos.length} grupos · {campanha.instancias?.length ?? 0} instâncias</p>
         </div>
+        <button
+          onClick={handleDeleteCampanha}
+          disabled={deleting}
+          aria-label="Excluir campanha"
+          title="Excluir campanha"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-500/20 bg-red-500/10 text-red-400 text-xs font-medium hover:bg-red-500/20 hover:border-red-500/30 transition-colors disabled:opacity-50 flex-shrink-0"
+        >
+          <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9.5 7V4.5a1 1 0 011-1h3a1 1 0 011 1V7M4 7h16" />
+          </svg>
+          {deleting ? 'Excluindo...' : 'Excluir campanha'}
+        </button>
       </div>
 
       {error && (
