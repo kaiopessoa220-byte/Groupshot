@@ -110,7 +110,7 @@ serve(async (req: Request) => {
   // DELETE /instance/:name
   const deleteInstanceMatch = path.match(/^\/instance\/([^/]+)$/)
   if (req.method === 'DELETE' && deleteInstanceMatch) {
-    const instanceName = deleteInstanceMatch[1]
+    const instanceName = decodeURIComponent(deleteInstanceMatch[1])
     try {
       const res = await fetch(`${EVOLUTION_URL}/instance/delete/${encodeURIComponent(instanceName)}`, {
         method: 'DELETE',
@@ -128,7 +128,7 @@ serve(async (req: Request) => {
   // GET /instance/qrcode/:name
   const qrcodeMatch = path.match(/^\/instance\/qrcode\/(.+)$/)
   if (req.method === 'GET' && qrcodeMatch) {
-    const instanceName = qrcodeMatch[1]
+    const instanceName = decodeURIComponent(qrcodeMatch[1])
     try {
       const res = await fetch(`${EVOLUTION_URL}/instance/connect/${encodeURIComponent(instanceName)}`, {
         headers: evolutionHeaders(),
